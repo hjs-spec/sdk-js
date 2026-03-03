@@ -1,0 +1,49 @@
+{
+  "name": "@hjs/sdk-js",
+  "version": "0.1.0",
+  "description": "JavaScript SDK for HJS: A Judgment Event Protocol",
+  "main": "index.js",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "require": "./index.cjs"
+    }
+  },
+  "scripts": {
+    "test": "node test.js",
+    "prepublishOnly": "npm test"
+  },
+  "keywords": [
+    "hjs",
+    "judgment",
+    "protocol",
+    "ietf",
+    "draft",
+    "ai",
+    "accountability",
+    "traceability",
+    "verification",
+    "delegation",
+    "termination"
+  ],
+  "author": "Human Judgment Systems Foundation Ltd.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hjs-protocol/sdk-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hjs-protocol/sdk-js/issues"
+  },
+  "homepage": "https://github.com/hjs-protocol/sdk-js#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md",
+    "LICENSE"
+  ]
+}
