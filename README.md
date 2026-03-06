@@ -15,10 +15,10 @@ npm install @hjs/sdk-js
 ## 🚀 Quick Start
 
 ```javascript
-const HJSClient = require('@JEP/sdk-js');
+const JEPClient = require('@JEP/sdk-js');
 
 const client = new JEPClient({ 
-  baseURL: 'https://api.hjs.sh',
+  baseURL: 'https://api.jep.sh',
   apiKey: 'your-api-key'  // Optional
 });
 
