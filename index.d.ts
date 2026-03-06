@@ -1,5 +1,6 @@
 /**
  * JEP JavaScript SDK Type Definitions
+ * Updated: March 2026 for JEP Protocol Alignment
  */
 
 declare module '@jep/sdk-js' {
@@ -32,7 +33,7 @@ declare module '@jep/sdk-js' {
   /** Response after creating a judgment */
   export interface JudgmentResponse extends BaseRecord {
     status: 'recorded';
-    protocol: 'JEP/1.0'; // Updated to JEP
+    protocol: 'JEP/1.0';  // 原 HJS/1.0 已更新
     timestamp: string;
     immutability_anchor?: {
       type: string;
@@ -191,7 +192,9 @@ declare module '@jep/sdk-js' {
      * Create a new judgment record
      * * @param params - Judgment request parameters
      * @returns Created judgment record
-     * @example
+     * @throws {Error} If entity or action is missing
+     * @throws {Error} If API request fails
+     * * @example
      * ```javascript
      * const result = await client.judgment({
      * entity: 'user@example.com',
@@ -206,6 +209,7 @@ declare module '@jep/sdk-js' {
      * Get a judgment record by ID
      * * @param id - Judgment ID (starts with 'jep_')
      * @returns Full judgment record
+     * @throws {Error} If record not found
      */
     getJudgment(id: string): Promise<FullJudgment>;
 
@@ -222,6 +226,15 @@ declare module '@jep/sdk-js' {
      * Create a new delegation
      * * @param params - Delegation request parameters
      * @returns Created delegation record
+     * @throws {Error} If delegator or delegatee is missing
+     * * @example
+     * ```javascript
+     * const result = await client.delegation({
+     * delegator: 'manager@company.com',
+     * delegatee: 'employee@company.com',
+     * scope: { permissions: ['read'] }
+     * });
+     * ```
      */
     delegation(params: DelegationRequest): Promise<DelegationResponse>;
 
@@ -234,6 +247,8 @@ declare module '@jep/sdk-js' {
 
     /**
      * List delegation records with optional filters
+     * * @param params - Query parameters
+     * @returns Paginated list of delegations
      */
     listDelegations(params?: ListDelegationsParams): Promise<ListResponse<FullDelegation>>;
 
@@ -241,11 +256,25 @@ declare module '@jep/sdk-js' {
 
     /**
      * Create a new termination record
+     * * @param params - Termination request parameters
+     * @returns Created termination record
+     * @throws {Error} If terminator, targetId, or targetType is missing
+     * * @example
+     * ```javascript
+     * const result = await client.termination({
+     * terminator: 'admin@company.com',
+     * targetId: 'dlg_1234567890abcd',
+     * targetType: 'delegation',
+     * reason: 'Employee left company'
+     * });
+     * ```
      */
     termination(params: TerminationRequest): Promise<TerminationResponse>;
 
     /**
      * Get a termination record by ID
+     * * @param id - Termination ID (starts with 'trm_')
+     * @returns Full termination record
      */
     getTermination(id: string): Promise<TerminationResponse>;
 
@@ -253,14 +282,19 @@ declare module '@jep/sdk-js' {
 
     /**
      * Verify a record (detailed verification)
+     * * @param params - Verification request parameters
+     * @returns Verification result
      */
     verification(params: VerificationRequest): Promise<VerificationResponse>;
 
     /**
      * Quick verify a record (auto-detects type from ID)
+     * * @param id - Record ID (any type)
+     * @returns Quick verification result
      * * @example
      * ```javascript
      * const result = await client.verify('jep_1234567890abcd');
+     * console.log(result.status); // 'VALID' or 'INVALID'
      * ```
      */
     verify(id: string): Promise<QuickVerifyResponse>;
@@ -269,16 +303,21 @@ declare module '@jep/sdk-js' {
 
     /**
      * Check API health
+     * * @returns Health status
      */
     health(): Promise<{ status: string; version: string; timestamp: string }>;
 
     /**
      * Get API documentation
+     * * @returns API documentation
      */
     docs(): Promise<Record<string, any>>;
 
     /**
      * Generate a new API key
+     * * @param email - User email
+     * @param name - Key name
+     * @returns Generated API key
      */
     generateKey(email: string, name?: string): Promise<{ key: string; email: string; name: string; created: string }>;
   }
