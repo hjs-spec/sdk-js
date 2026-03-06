@@ -1,8 +1,8 @@
 /**
- * HJS JavaScript SDK Type Definitions
+ * JEP JavaScript SDK Type Definitions
  */
 
-declare module '@hjs/sdk-js' {
+declare module '@jep/sdk-js' {
   // ========== Core Types ==========
 
   /** Immutability anchor configuration */
@@ -32,7 +32,7 @@ declare module '@hjs/sdk-js' {
   /** Response after creating a judgment */
   export interface JudgmentResponse extends BaseRecord {
     status: 'recorded';
-    protocol: 'HJS/1.0';
+    protocol: 'JEP/1.0'; // Updated to JEP
     timestamp: string;
     immutability_anchor?: {
       type: string;
@@ -152,7 +152,7 @@ declare module '@hjs/sdk-js' {
 
   /** Client configuration options */
   export interface ClientOptions {
-    /** API base URL (default: 'https://api.hjs.sh') */
+    /** API base URL (default: 'https://api.jep-protocol.org') */
     baseURL?: string;
     /** API key for authentication */
     apiKey?: string;
@@ -161,24 +161,22 @@ declare module '@hjs/sdk-js' {
   // ========== Main Client Class ==========
 
   /**
-   * HJS JavaScript SDK Client
-   * 
-   * Provides access to all HJS core primitives:
+   * JEP JavaScript SDK Client
+   * * Provides access to all JEP core primitives:
    * - Judgment: Record structured decisions
    * - Delegation: Transfer authority
    * - Termination: End responsibility chains
    * - Verification: Validate records
    */
-  export default class HJSClient {
+  export default class JEPClient {
     /**
-     * Create a new HJS client instance
-     * 
-     * @param options - Client configuration options
+     * Create a new JEP client instance
+     * * @param options - Client configuration options
      * @example
      * ```javascript
-     * const client = new HJSClient({
-     *   baseURL: 'https://api.hjs.sh',
-     *   apiKey: 'your-api-key'
+     * const client = new JEPClient({
+     * baseURL: '[https://api.jep-protocol.org](https://api.jep-protocol.org)',
+     * apiKey: 'your-api-key'
      * });
      * ```
      */
@@ -191,18 +189,14 @@ declare module '@hjs/sdk-js' {
 
     /**
      * Create a new judgment record
-     * 
-     * @param params - Judgment request parameters
+     * * @param params - Judgment request parameters
      * @returns Created judgment record
-     * @throws {Error} If entity or action is missing
-     * @throws {Error} If API request fails
-     * 
      * @example
      * ```javascript
      * const result = await client.judgment({
-     *   entity: 'user@example.com',
-     *   action: 'approve',
-     *   scope: { amount: 1000 }
+     * entity: 'user@example.com',
+     * action: 'approve',
+     * scope: { amount: 1000 }
      * });
      * ```
      */
@@ -210,17 +204,14 @@ declare module '@hjs/sdk-js' {
 
     /**
      * Get a judgment record by ID
-     * 
-     * @param id - Judgment ID (starts with 'jgd_')
+     * * @param id - Judgment ID (starts with 'jep_')
      * @returns Full judgment record
-     * @throws {Error} If record not found
      */
     getJudgment(id: string): Promise<FullJudgment>;
 
     /**
      * List judgment records with optional filters
-     * 
-     * @param params - Query parameters
+     * * @param params - Query parameters
      * @returns Paginated list of judgments
      */
     listJudgments(params?: ListJudgmentsParams): Promise<ListResponse<FullJudgment>>;
@@ -229,35 +220,20 @@ declare module '@hjs/sdk-js' {
 
     /**
      * Create a new delegation
-     * 
-     * @param params - Delegation request parameters
+     * * @param params - Delegation request parameters
      * @returns Created delegation record
-     * @throws {Error} If delegator or delegatee is missing
-     * 
-     * @example
-     * ```javascript
-     * const result = await client.delegation({
-     *   delegator: 'manager@company.com',
-     *   delegatee: 'employee@company.com',
-     *   scope: { permissions: ['read'] }
-     * });
-     * ```
      */
     delegation(params: DelegationRequest): Promise<DelegationResponse>;
 
     /**
      * Get a delegation record by ID
-     * 
-     * @param id - Delegation ID (starts with 'dlg_')
+     * * @param id - Delegation ID (starts with 'dlg_')
      * @returns Full delegation record
      */
     getDelegation(id: string): Promise<FullDelegation>;
 
     /**
      * List delegation records with optional filters
-     * 
-     * @param params - Query parameters
-     * @returns Paginated list of delegations
      */
     listDelegations(params?: ListDelegationsParams): Promise<ListResponse<FullDelegation>>;
 
@@ -265,28 +241,11 @@ declare module '@hjs/sdk-js' {
 
     /**
      * Create a new termination record
-     * 
-     * @param params - Termination request parameters
-     * @returns Created termination record
-     * @throws {Error} If terminator, targetId, or targetType is missing
-     * 
-     * @example
-     * ```javascript
-     * const result = await client.termination({
-     *   terminator: 'admin@company.com',
-     *   targetId: 'dlg_1234567890abcd',
-     *   targetType: 'delegation',
-     *   reason: 'Employee left company'
-     * });
-     * ```
      */
     termination(params: TerminationRequest): Promise<TerminationResponse>;
 
     /**
      * Get a termination record by ID
-     * 
-     * @param id - Termination ID (starts with 'trm_')
-     * @returns Full termination record
      */
     getTermination(id: string): Promise<TerminationResponse>;
 
@@ -294,22 +253,14 @@ declare module '@hjs/sdk-js' {
 
     /**
      * Verify a record (detailed verification)
-     * 
-     * @param params - Verification request parameters
-     * @returns Verification result
      */
     verification(params: VerificationRequest): Promise<VerificationResponse>;
 
     /**
      * Quick verify a record (auto-detects type from ID)
-     * 
-     * @param id - Record ID (any type)
-     * @returns Quick verification result
-     * 
-     * @example
+     * * @example
      * ```javascript
-     * const result = await client.verify('dlg_1234567890abcd');
-     * console.log(result.status); // 'VALID' or 'INVALID'
+     * const result = await client.verify('jep_1234567890abcd');
      * ```
      */
     verify(id: string): Promise<QuickVerifyResponse>;
@@ -318,24 +269,16 @@ declare module '@hjs/sdk-js' {
 
     /**
      * Check API health
-     * 
-     * @returns Health status
      */
     health(): Promise<{ status: string; version: string; timestamp: string }>;
 
     /**
      * Get API documentation
-     * 
-     * @returns API documentation
      */
     docs(): Promise<Record<string, any>>;
 
     /**
      * Generate a new API key
-     * 
-     * @param email - User email
-     * @param name - Key name
-     * @returns Generated API key
      */
     generateKey(email: string, name?: string): Promise<{ key: string; email: string; name: string; created: string }>;
   }
