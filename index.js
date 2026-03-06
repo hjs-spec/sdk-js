@@ -1,16 +1,17 @@
-// Universal HJS SDK (works in browser and Node.js)
-// HJS Protocol - Complete SDK with all 4 primitives
-// IETF Draft: draft-wang-hjs-judgment-event-00
+// Universal JEP SDK (works in browser and Node.js)
+// JEP Protocol - Complete SDK with all 4 primitives
+// IETF Draft: draft-wang-jep-judgment-event-00
 
-class HJSClient {
+class JEPClient {
   /**
-   * Create a new HJS client
+   * Create a new JEP client
    * @param {Object} options - Configuration options
-   * @param {string} options.baseURL - The base URL of the HJS API (default: https://api.hjs.sh)
+   * @param {string} options.baseURL - The base URL of the JEP API (default: https://api.jep-protocol.org)
    * @param {string} options.apiKey - API key for authentication
    */
   constructor(options = {}) {
-    this.baseURL = options.baseURL || 'https://api.hjs.sh';
+    // 默认地址统一更新为 jep-protocol.org
+    this.baseURL = options.baseURL || 'https://api.jep-protocol.org';
     this.apiKey = options.apiKey || null;
     this.fetch = this._getFetchImplementation();
   }
@@ -70,7 +71,7 @@ class HJSClient {
 
   /**
    * Get a judgment by ID
-   * @param {string} id - The judgment ID (starts with 'jgd_')
+   * @param {string} id - The judgment ID (starts with 'jep_')
    * @returns {Promise<Object>} - The judgment data
    */
   async getJudgment(id) {
@@ -86,9 +87,6 @@ class HJSClient {
   /**
    * List judgments
    * @param {Object} params - Query parameters
-   * @param {string} params.entity - Filter by entity
-   * @param {number} params.page - Page number
-   * @param {number} params.limit - Items per page
    * @returns {Promise<Object>} - Paginated list of judgments
    */
   async listJudgments(params = {}) {
@@ -105,11 +103,6 @@ class HJSClient {
   /**
    * Create a delegation
    * @param {Object} params - Delegation parameters
-   * @param {string} params.delegator - Who is delegating
-   * @param {string} params.delegatee - Who receives the delegation
-   * @param {string} params.judgmentId - Optional linked judgment
-   * @param {Object} params.scope - Delegation scope/permissions
-   * @param {string} params.expiry - ISO date when delegation expires
    * @returns {Promise<Object>} - The created delegation
    */
   async delegation(params) {
@@ -137,7 +130,6 @@ class HJSClient {
   /**
    * Get a delegation by ID
    * @param {string} id - The delegation ID (starts with 'dlg_')
-   * @returns {Promise<Object>} - The delegation data
    */
   async getDelegation(id) {
     if (!id) throw new Error('id is required');
@@ -151,13 +143,6 @@ class HJSClient {
 
   /**
    * List delegations
-   * @param {Object} params - Query parameters
-   * @param {string} params.delegator - Filter by delegator
-   * @param {string} params.delegatee - Filter by delegatee
-   * @param {string} params.status - Filter by status ('active', 'revoked')
-   * @param {number} params.page - Page number
-   * @param {number} params.limit - Items per page
-   * @returns {Promise<Object>} - Paginated list of delegations
    */
   async listDelegations(params = {}) {
     const query = new URLSearchParams(params).toString();
@@ -172,12 +157,6 @@ class HJSClient {
 
   /**
    * Create a termination
-   * @param {Object} params - Termination parameters
-   * @param {string} params.terminator - Who is terminating
-   * @param {string} params.targetId - ID of judgment or delegation to terminate
-   * @param {string} params.targetType - 'judgment' or 'delegation'
-   * @param {string} params.reason - Optional reason for termination
-   * @returns {Promise<Object>} - The created termination
    */
   async termination(params) {
     const { terminator, targetId, targetType, reason } = params;
@@ -205,8 +184,6 @@ class HJSClient {
 
   /**
    * Get a termination by ID
-   * @param {string} id - The termination ID (starts with 'trm_')
-   * @returns {Promise<Object>} - The termination data
    */
   async getTermination(id) {
     if (!id) throw new Error('id is required');
@@ -222,20 +199,12 @@ class HJSClient {
 
   /**
    * Verify any record (judgment, delegation, or termination)
-   * @param {Object} params - Verification parameters
-   * @param {string} params.verifier - Who is verifying
-   * @param {string} params.targetId - ID of record to verify
-   * @param {string} params.targetType - 'judgment', 'delegation', or 'termination'
-   * @returns {Promise<Object>} - Verification result
    */
   async verification(params) {
     const { verifier, targetId, targetType } = params;
     
     if (!verifier || !targetId || !targetType) {
       throw new Error('verifier, targetId, and targetType are required');
-    }
-    if (!['judgment', 'delegation', 'termination'].includes(targetType)) {
-      throw new Error('targetType must be "judgment", "delegation", or "termination"');
     }
 
     const response = await this.fetch(`${this.baseURL}/verifications`, {
@@ -253,8 +222,7 @@ class HJSClient {
 
   /**
    * Quick verify (auto-detects type from ID prefix)
-   * @param {string} id - Record ID (jgd_, dlg_, or trm_)
-   * @returns {Promise<Object>} - Quick verification result
+   * @param {string} id - Record ID (jep_, dlg_, or trm_)
    */
   async verify(id) {
     if (!id) throw new Error('id is required');
@@ -272,7 +240,6 @@ class HJSClient {
 
   /**
    * Check API health
-   * @returns {Promise<Object>} - Health status
    */
   async health() {
     const response = await this.fetch(`${this.baseURL}/health`);
@@ -281,7 +248,6 @@ class HJSClient {
 
   /**
    * Get API documentation
-   * @returns {Promise<Object>} - API documentation
    */
   async docs() {
     const response = await this.fetch(`${this.baseURL}/api/docs`);
@@ -289,10 +255,7 @@ class HJSClient {
   }
 
   /**
-   * Generate a new API key (no authentication required)
-   * @param {string} email - User email
-   * @param {string} name - Key name/description
-   * @returns {Promise<Object>} - Generated API key
+   * Generate a new API key
    */
   async generateKey(email, name = 'default') {
     if (!email) throw new Error('email is required');
@@ -307,10 +270,10 @@ class HJSClient {
   }
 }
 
-// Export for ES modules (Node.js with "type": "module" or bundlers)
-export default HJSClient;
+// Export for ES modules
+export default JEPClient;
 
 // Also expose as global for browser
 if (typeof window !== 'undefined') {
-  window.HJSClient = HJSClient;
+  window.JEPClient = JEPClient;
 }
