@@ -58,7 +58,7 @@ const client = new JEPClient(options);
 **Options:**
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `baseURL` | string | `'https://api.hjs.sh'` | API base URL |
+| `baseURL` | string | `'https://api.jep.sh'` | API base URL |
 | `apiKey` | string | `null` | API key for authentication |
 
 ---
