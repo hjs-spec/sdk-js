@@ -1,8 +1,8 @@
-# HJS JavaScript SDK
+# JEP JavaScript SDK
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-JavaScript SDK for [HJS: A Judgment Event Protocol](https://github.com/hjs-protocol/spec).
+JavaScript SDK for [JEP: A Judgment Event Protocol](https://github.com/hjs-protocol/spec).
 
 Implements all 4 core primitives: **Judgment**, **Delegation**, **Termination**, **Verification**.
 
@@ -15,9 +15,9 @@ npm install @hjs/sdk-js
 ## 🚀 Quick Start
 
 ```javascript
-const HJSClient = require('@hjs/sdk-js');
+const HJSClient = require('@JEP/sdk-js');
 
-const client = new HJSClient({ 
+const client = new JEPClient({ 
   baseURL: 'https://api.hjs.sh',
   apiKey: 'your-api-key'  // Optional
 });
@@ -52,7 +52,7 @@ example();
 ### Constructor
 
 ```javascript
-const client = new HJSClient(options);
+const client = new JEPClient(options);
 ```
 
 **Options:**
@@ -81,7 +81,7 @@ const result = await client.judgment({
 {
   id: 'jgd_1234567890abcd',
   status: 'recorded',
-  protocol: 'HJS/1.0',
+  protocol: 'JEP/1.0',
   timestamp: '2026-02-23T12:00:00.000Z',
   immutability_anchor: {
     type: 'ots',
@@ -226,7 +226,7 @@ const key = await client.generateKey('user@example.com', 'my-app');
 
 ```bash
 # Clone the repository
-git clone https://github.com/hjs-protocol/sdk-js.git
+git clone https://github.com/jep-protocol/sdk-js.git
 cd sdk-js
 
 # Install dependencies
@@ -243,7 +243,7 @@ The SDK works in both Node.js and browsers:
 ```html
 <script src="https://cdn.jsdelivr.net/npm/@hjs/sdk-js@latest"></script>
 <script>
-  const client = new HJSClient({ apiKey: 'your-key' });
+  const client = new JEPClient({ apiKey: 'your-key' });
   
   client.judgment({
     entity: 'user@example.com',
