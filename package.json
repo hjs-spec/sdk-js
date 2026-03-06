@@ -1,7 +1,7 @@
 {
-  "name": "@hjs/sdk-js",
-  "version": "0.1.0",
-  "description": "JavaScript SDK for HJS: A Judgment Event Protocol",
+  "name": "@jep/sdk-js",
+  "version": "1.0.0",
+  "description": "Official JavaScript SDK for JEP: Judgment Event Protocol",
   "main": "index.js",
   "type": "module",
   "exports": {
@@ -15,28 +15,27 @@
     "prepublishOnly": "npm test"
   },
   "keywords": [
-    "hjs",
-    "judgment",
+    "jep",
+    "judgment-event-protocol",
     "protocol",
     "ietf",
-    "draft",
-    "ai",
+    "rfc9562",
+    "ai-governance",
     "accountability",
     "traceability",
-    "verification",
-    "delegation",
-    "termination"
+    "compliance",
+    "eu-ai-act"
   ],
-  "author": "Human Judgment Systems Foundation Ltd.",
+  "author": "JEP Foundation Ltd. (Singapore)",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hjs-protocol/sdk-js.git"
+    "url": "git+https://github.com/jep-protocol/sdk-js.git"
   },
   "bugs": {
-    "url": "https://github.com/hjs-protocol/sdk-js/issues"
+    "url": "https://github.com/jep-protocol/sdk-js/issues"
   },
-  "homepage": "https://github.com/hjs-protocol/sdk-js#readme",
+  "homepage": "https://jep-protocol.org",
   "engines": {
     "node": ">=18.0.0"
   },
