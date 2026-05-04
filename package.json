@@ -1,48 +1,39 @@
 {
-  "name": "@jep/sdk-js",
-  "version": "1.0.0",
-  "description": "Official JavaScript SDK for JEP: Judgment Event Protocol",
-  "main": "index.js",
+  "name": "@hjs-spec/jep-sdk-js",
+  "version": "0.6.0",
+  "description": "JavaScript SDK seed for creating and verifying JEP v0.6 events through the JEP API",
   "type": "module",
+  "main": "src/index.js",
   "exports": {
     ".": {
-      "import": "./index.js",
-      "require": "./index.cjs"
+      "types": "./index.d.ts",
+      "import": "./src/index.js"
     }
   },
   "scripts": {
-    "test": "node test.js",
-    "prepublishOnly": "npm test"
+    "test": "node --test tests/*.test.js"
   },
   "keywords": [
     "jep",
-    "judgment-event-protocol",
-    "protocol",
-    "ietf",
-    "rfc9562",
-    "ai-governance",
-    "accountability",
-    "traceability",
-    "compliance",
-    "eu-ai-act"
+    "jep-sdk",
+    "judgment-events",
+    "jep-api",
+    "event-hash",
+    "validation",
+    "ai-accountability"
   ],
-  "author": "JEP Foundation Ltd. (Singapore)",
+  "author": "HJS Spec",
   "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jep-protocol/sdk-js.git"
+    "url": "https://github.com/hjs-spec/jep-sdk-js.git"
   },
   "bugs": {
-    "url": "https://github.com/jep-protocol/sdk-js/issues"
+    "url": "https://github.com/hjs-spec/jep-sdk-js/issues"
   },
-  "homepage": "https://jep-protocol.org",
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "files": [
-    "index.js",
-    "index.d.ts",
-    "README.md",
-    "LICENSE"
-  ]
+  "homepage": "https://github.com/hjs-spec/jep-sdk-js",
+  "types": "index.d.ts"
 }

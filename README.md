@@ -1,268 +1,157 @@
-# JEP JavaScript SDK
+# JEP JavaScript SDK v0.6
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+JavaScript SDK for the JEP v0.6 API seed.
 
-JavaScript SDK for [JEP: A Judgment Event Protocol](https://github.com/hjs-protocol/spec).
+This SDK targets the current JEP API shape:
 
-Implements all 4 core primitives: **Judgment**, **Delegation**, **Termination**, **Verification**.
+```text
+POST /events/create
+POST /events/verify
+GET  /health
+```
 
-## 📦 Installation
+It is aligned with:
+
+- `draft-wang-jep-judgment-event-protocol-06`
+- `draft-wang-jep-profiles-00`
+- `draft-wang-jep-conformance-00`
+- `hjs-spec/jep-api`
+
+## Status
+
+Experimental implementation seed.
+
+This SDK does not define new JEP-Core semantics and does not determine legal liability, factual truth, regulatory compliance, or complete-log availability.
+
+## Installation
 
 ```bash
-npm install @hjs/sdk-js
+npm install @hjs-spec/jep-sdk-js
 ```
 
-## 🚀 Quick Start
+For local development:
 
-```javascript
-const JEPClient = require('@JEP/sdk-js');
+```bash
+npm test
+```
 
-const client = new JEPClient({ 
-  baseURL: 'https://api.jep.sh',
-  apiKey: 'your-api-key'  // Optional
+## Quick Start
+
+```js
+import { JEPClient, Verb } from "@hjs-spec/jep-sdk-js";
+
+const client = new JEPClient({
+  baseUrl: "http://127.0.0.1:8000",
 });
 
-async function example() {
-  // 1. Record a judgment
-  const record = await client.judgment({
-    entity: 'alice@bank.com',
-    action: 'loan_approved',
-    scope: { amount: 100000 }
-  });
-  console.log('✅ Judgment recorded:', record.id);
+const created = await client.createEvent({
+  verb: Verb.Judgment,
+  who: "did:example:agent-789",
+  what: { claim: "approve" },
+});
 
-  // 2. Create a delegation
-  const delegation = await client.delegation({
-    delegator: 'manager@company.com',
-    delegatee: 'employee@company.com',
-    scope: { permissions: ['approve_under_1000'] }
-  });
-  console.log('✅ Delegation created:', delegation.id);
+console.log(created.event_hash);
 
-  // 3. Verify any record
-  const verify = await client.verify(delegation.id);
-  console.log('✅ Verification result:', verify.status);  // 'VALID' or 'INVALID'
-}
+const verified = await client.verifyEvent({
+  event: created.event,
+  mode: "archival",
+});
 
-example();
+console.log(verified.valid);
 ```
 
-## 📚 API Reference
+## Core Exports
 
-### Constructor
+- `JEPClient`
+- `Verb`
+- `JEPValidationError`
+- `JEPAPIError`
+- `eventToJSON`
+- `isValidationResult`
 
-```javascript
-const client = new JEPClient(options);
+Supported verbs:
+
+```js
+Verb.Judgment
+Verb.Delegation
+Verb.Termination
+Verb.Verification
 ```
 
-**Options:**
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `baseURL` | string | `'https://api.jep.sh'` | API base URL |
-| `apiKey` | string | `null` | API key for authentication |
+## API
 
----
+### Create event
 
-### Core Primitives
-
-#### 1. Judgment — Record structured decisions
-
-```javascript
-const result = await client.judgment({
-  entity: 'user@example.com',    // Required: who is making the judgment
-  action: 'approve',              // Required: what action
-  scope: { amount: 1000 },       // Optional: additional context
-  immutability: { type: 'ots' }  // Optional: anchor to blockchain
+```js
+const resp = await client.createEvent({
+  verb: Verb.Judgment,
+  who: "did:example:agent",
+  what: "sha256:...",
 });
 ```
 
-**Returns:**
-```javascript
-{
-  id: 'jgd_1234567890abcd',
-  status: 'recorded',
-  protocol: 'JEP/1.0',
-  timestamp: '2026-02-23T12:00:00.000Z',
-  immutability_anchor: {
-    type: 'ots',
-    reference: '...',
-    anchored_at: '...'
-  }
-}
-```
+### Verify event
 
-#### 2. Delegation — Transfer authority
-
-```javascript
-const result = await client.delegation({
-  delegator: 'manager@company.com',   // Required: who delegates
-  delegatee: 'employee@company.com',  // Required: who receives
-  judgmentId: 'jgd_xxx',              // Optional: linked judgment
-  scope: { permissions: ['approve'] }, // Optional: delegation scope
-  expiry: '2026-12-31T23:59:59Z'      // Optional: expiration time
+```js
+const result = await client.verifyEvent({
+  event: resp.event,
+  mode: "archival",
 });
 ```
 
-**Returns:**
-```javascript
-{
-  id: 'dlg_1234567890abcd',
-  status: 'active',
-  delegator: 'manager@company.com',
-  delegatee: 'employee@company.com',
-  scope: { permissions: ['approve'] },
-  created_at: '2026-02-23T12:00:00.000Z'
-}
+### Convenience helpers
+
+```js
+await client.judgment("did:example:agent", what);
+await client.delegation("did:example:agent", what);
+await client.termination("did:example:agent", what, "sha256:parent");
+await client.verification("did:example:agent", what, "sha256:parent");
 ```
 
-#### 3. Termination — End responsibility
+### Health
 
-```javascript
-const result = await client.termination({
-  terminator: 'admin@company.com',     // Required: who terminates
-  targetId: 'dlg_1234567890abcd',      // Required: what to terminate
-  targetType: 'delegation',            // Required: 'judgment' or 'delegation'
-  reason: 'Employee left company'      // Optional: reason for termination
-});
-```
-
-**Returns:**
-```javascript
-{
-  id: 'trm_1234567890abcd',
-  terminator: 'admin@company.com',
-  target_id: 'dlg_1234567890abcd',
-  target_type: 'delegation',
-  reason: 'Employee left company',
-  created_at: '2026-02-23T12:00:00.000Z'
-}
-```
-
-#### 4. Verification — Validate records
-
-```javascript
-// Method 1: Detailed verification
-const result = await client.verification({
-  verifier: 'auditor@company.com',
-  targetId: 'dlg_1234567890abcd',
-  targetType: 'delegation'  // 'judgment', 'delegation', or 'termination'
-});
-
-// Method 2: Quick verify (auto-detects type from ID)
-const result = await client.verify('dlg_1234567890abcd');
-```
-
-**Returns:**
-```javascript
-{
-  id: 'vfy_1234567890abcd',
-  result: 'VALID',  // or 'INVALID'
-  details: {
-    valid: true,
-    delegation: {...},
-    judgment: {...}
-  },
-  verified_at: '2026-02-23T12:00:00.000Z'
-}
-```
-
----
-
-### Query Methods
-
-#### Get single record
-
-```javascript
-const judgment = await client.getJudgment('jgd_xxx');
-const delegation = await client.getDelegation('dlg_xxx');
-const termination = await client.getTermination('trm_xxx');
-```
-
-#### List records
-
-```javascript
-// List judgments
-const judgments = await client.listJudgments({
-  entity: 'user@example.com',
-  page: 1,
-  limit: 20
-});
-
-// List delegations
-const delegations = await client.listDelegations({
-  delegator: 'manager@company.com',
-  status: 'active'
-});
-```
-
----
-
-### Utility Methods
-
-#### Health check
-
-```javascript
+```js
 const health = await client.health();
-// Returns: { status: 'healthy', version: '1.0.0', ... }
 ```
 
-#### API documentation
+## Extensions
 
-```javascript
-const docs = await client.docs();
-// Returns complete API documentation
+```js
+await client.createEvent({
+  verb: Verb.Judgment,
+  who: "did:example:agent",
+  what: { claim: "approve" },
+  ext: {
+    "https://example.org/profile": { name: "demo" },
+  },
+  ext_crit: ["https://example.org/profile"],
+});
 ```
 
-#### Generate API key
-
-```javascript
-const key = await client.generateKey('user@example.com', 'my-app');
-// Returns: { key: '...', email: '...', created: '...' }
-```
-
----
-
-## 🧪 Testing
+## Testing
 
 ```bash
-# Clone the repository
-git clone https://github.com/jep-protocol/sdk-js.git
-cd sdk-js
-
-# Install dependencies
-npm install
-
-# Run tests
-node test.js
+npm test
 ```
 
-## 🌐 Browser Usage
+Tests use a local in-process HTTP server and do not require a live JEP API.
 
-The SDK works in both Node.js and browsers:
+## Related Repositories
 
-```html
-<script src="https://cdn.jsdelivr.net/npm/@hjs/sdk-js@latest"></script>
-<script>
-  const client = new JEPClient({ apiKey: 'your-key' });
-  
-  client.judgment({
-    entity: 'user@example.com',
-    action: 'test'
-  }).then(result => {
-    console.log('Recorded:', result.id);
-  });
-</script>
-```
+- JEP v0.6: https://github.com/hjs-spec/jep-v06
+- JEP API v0.6: https://github.com/hjs-spec/jep-api
+- JEP Python SDK v0.6: https://github.com/hjs-spec/jep-sdk-py
+- JEP Go SDK v0.6: https://github.com/hjs-spec/jep-sdk-go
+- JEP CLI v0.6: https://github.com/hjs-spec/jep-cli
+- HJS v0.5: https://github.com/hjs-spec/hjs-05
+- JAC v0.5: https://github.com/hjs-spec/jac-agent-02
 
-## 📄 License
+## Public Drafts
 
-MIT License — see [LICENSE](LICENSE) for details.
+- JEP-Core: https://datatracker.ietf.org/doc/draft-wang-jep-judgment-event-protocol/
+- JEP-Profiles: https://datatracker.ietf.org/doc/draft-wang-jep-profiles/
+- JEP-Conformance: https://datatracker.ietf.org/doc/draft-wang-jep-conformance/
 
-## 🔗 Related Repositories
+## License
 
-- [Protocol Specification](https://github.com/hjs-protocol/spec)
-- [Core Implementation (Rust)](https://github.com/hjs-protocol/core)
-- [API Service](https://github.com/hjs-protocol/api)
-- [Python SDK](https://github.com/hjs-protocol/sdk-py)
-- [CLI Tool](https://github.com/hjs-protocol/cli)
-```
+MIT

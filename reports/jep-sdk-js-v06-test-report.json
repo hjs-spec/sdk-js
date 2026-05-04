@@ -1,0 +1,6 @@
+{
+  "cmd": "npm test",
+  "returncode": 0,
+  "stdout": "\n> @hjs-spec/jep-sdk-js@0.6.0 test\n> node --test tests/*.test.js\n\nTAP version 13\n# Subtest: createEvent calls /events/create\nok 1 - createEvent calls /events/create\n  ---\n  duration_ms: 73.072858\n  type: 'test'\n  ...\n# Subtest: verifyEvent calls /events/verify\nok 2 - verifyEvent calls /events/verify\n  ---\n  duration_ms: 20.603642\n  type: 'test'\n  ...\n# Subtest: health calls /health\nok 3 - health calls /health\n  ---\n  duration_ms: 10.015824\n  type: 'test'\n  ...\n# Subtest: convenience helpers set verbs\nok 4 - convenience helpers set verbs\n  ---\n  duration_ms: 48.618036\n  type: 'test'\n  ...\n# Subtest: validates create request\nok 5 - validates create request\n  ---\n  duration_ms: 1.477759\n  type: 'test'\n  ...\n# Subtest: throws JEPAPIError on HTTP error\nok 6 - throws JEPAPIError on HTTP error\n  ---\n  duration_ms: 0.574378\n  type: 'test'\n  ...\n# Subtest: eventToJSON returns formatted JSON\nok 7 - eventToJSON returns formatted JSON\n  ---\n  duration_ms: 0.348348\n  type: 'test'\n  ...\n1..7\n# tests 7\n# suites 0\n# pass 7\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 530.497652\n",
+  "stderr": ""
+}
