@@ -25,7 +25,7 @@ This SDK does not define new JEP-Core semantics and does not determine legal lia
 
 ## Installation
 
-The `v0.6.1` tarball is available from [GitHub Releases](https://github.com/hjs-spec/sdk-js/releases/tag/v0.6.1). npm publication is pending account configuration; see [publication recovery](PUBLISHING.md).
+The `v0.6.2` tarball is available from [GitHub Releases](https://github.com/hjs-spec/sdk-js/releases/tag/v0.6.2). npm publication is pending account configuration; see [publication recovery](PUBLISHING.md).
 
 ```bash
 npm install @hjs-spec/jep-sdk-js
@@ -157,3 +157,5 @@ Tests use a local in-process HTTP server and do not require a live JEP API.
 ## License
 
 MIT
+
+Validation results expose `conformance_class` from the API. This field may be absent (empty in Python/Go) with older servers; it is never inferred as proof of conformance. Diagnostic maps preserve `code`, `message`, `level`, and `recoverable`.

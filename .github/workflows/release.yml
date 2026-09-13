@@ -4,6 +4,11 @@ on:
     branches: [main]
     paths: [VERSION]
   workflow_dispatch:
+    inputs:
+      publish_npm:
+        description: Publish this release to npm (currently paused)
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -43,6 +48,7 @@ jobs:
           fi
           gh release create "v$version" --target "$GITHUB_SHA" --title "v$version" --notes-file RELEASE-NOTES.md dist/*
   npm:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_npm
     needs: release
     runs-on: ubuntu-latest
     permissions:
