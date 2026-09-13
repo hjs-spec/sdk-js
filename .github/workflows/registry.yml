@@ -21,3 +21,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
       - run: npm publish ./dist/*.tgz --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

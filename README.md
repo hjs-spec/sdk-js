@@ -25,6 +25,8 @@ This SDK does not define new JEP-Core semantics and does not determine legal lia
 
 ## Installation
 
+The `v0.6.1` tarball is available from [GitHub Releases](https://github.com/hjs-spec/sdk-js/releases/tag/v0.6.1). npm publication is pending account configuration; see [publication recovery](PUBLISHING.md).
+
 ```bash
 npm install @hjs-spec/jep-sdk-js
 ```
