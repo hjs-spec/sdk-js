@@ -1,6 +1,6 @@
 # JEP JavaScript SDK v0.6
 
-JavaScript SDK for the JEP v0.6 API seed.
+JavaScript client for the JEP-Core-0.6 API (wire version `"1"`). SDK release versions are separate from the protocol version.
 
 This SDK targets the current JEP API shape:
 
@@ -25,19 +25,15 @@ This SDK does not define new JEP-Core semantics and does not determine legal lia
 
 ## Installation
 
-The `v0.6.2` tarball is available from [GitHub Releases](https://github.com/hjs-spec/sdk-js/releases/tag/v0.6.2). npm publication is pending account configuration; see [publication recovery](PUBLISHING.md).
+The `v0.6.2` tarball is available from [GitHub Releases](https://github.com/hjs-spec/sdk-js/releases/tag/v0.6.2). npm publication is paused; see [publication recovery](https://github.com/hjs-spec/sdk-js/blob/main/PUBLISHING.md). Install the release asset directly:
 
 ```bash
-npm install @hjs-spec/jep-sdk-js
-```
-
-For local development:
-
-```bash
-npm test
+npm install https://github.com/hjs-spec/sdk-js/releases/download/v0.6.2/hjs-spec-jep-sdk-js-0.6.2.tgz
 ```
 
 ## Quick Start
+
+Start the [local API](https://github.com/hjs-spec/jep-api#run-locally) before running this example. Verification uses that API's configured trusted keys.
 
 ```js
 import { JEPClient, Verb } from "@hjs-spec/jep-sdk-js";
@@ -80,35 +76,11 @@ Verb.Termination
 Verb.Verification
 ```
 
-## API
+## API and helpers
 
-### Create event
+The quickstart above demonstrates event creation and archival verification. The client also exposes helpers for the four verbs; see [client methods and types](src/index.js) for signatures and options.
 
-```js
-const resp = await client.createEvent({
-  verb: Verb.Judgment,
-  who: "did:example:agent",
-  what: "sha256:...",
-});
-```
-
-### Verify event
-
-```js
-const result = await client.verifyEvent({
-  event: resp.event,
-  mode: "archival",
-});
-```
-
-### Convenience helpers
-
-```js
-await client.judgment("did:example:agent", what);
-await client.delegation("did:example:agent", what);
-await client.termination("did:example:agent", what, "sha256:parent");
-await client.verification("did:example:agent", what, "sha256:parent");
-```
+For object-form `what`, `D` requires a claim, delegatee, and scope; `T` requires a claim, target, and termination scope; `V` requires a verification scope and non-null reference. Digest-form claims are also supported. Use the actual returned event hash for an event reference. See the [event schema](https://github.com/hjs-spec/jep-v06/blob/main/schemas/jep-event.schema.json) for the full requirements.
 
 ### Health
 
@@ -118,6 +90,8 @@ const health = await client.health();
 
 ## Extensions
 
+This example carries non-critical application metadata; the core API does not validate its semantics. Mark an extension critical only when the target verifier implements it, or the API will reject it.
+
 ```js
 await client.createEvent({
   verb: Verb.Judgment,
@@ -126,9 +100,12 @@ await client.createEvent({
   ext: {
     "https://example.org/profile": { name: "demo" },
   },
-  ext_crit: ["https://example.org/profile"],
 });
 ```
+
+## Validation results
+
+Validation results preserve the API's `conformance_class` and diagnostic fields (`code`, `message`, `level`, `recoverable`). Older servers may omit the class; the SDK does not infer conformance.
 
 ## Testing
 
@@ -142,9 +119,9 @@ Tests use a local in-process HTTP server and do not require a live JEP API.
 
 - JEP v0.6: https://github.com/hjs-spec/jep-v06
 - JEP API v0.6: https://github.com/hjs-spec/jep-api
-- JEP Python SDK v0.6: https://github.com/hjs-spec/jep-sdk-py
-- JEP Go SDK v0.6: https://github.com/hjs-spec/jep-sdk-go
-- JEP CLI v0.6: https://github.com/hjs-spec/jep-cli
+- JEP Python SDK v0.6: https://github.com/hjs-spec/sdk-py
+- JEP Go SDK v0.6: https://github.com/hjs-spec/sdk-go
+- JEP CLI v0.6: https://github.com/hjs-spec/cli
 - HJS v0.5: https://github.com/hjs-spec/hjs-05
 - JAC v0.5: https://github.com/hjs-spec/jac-agent-02
 
@@ -157,5 +134,3 @@ Tests use a local in-process HTTP server and do not require a live JEP API.
 ## License
 
 MIT
-
-Validation results expose `conformance_class` from the API. This field may be absent (empty in Python/Go) with older servers; it is never inferred as proof of conformance. Diagnostic maps preserve `code`, `message`, `level`, and `recoverable`.
