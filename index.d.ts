@@ -18,10 +18,10 @@ export interface JEPEvent {
   what?: unknown;
   nonce: string;
   aud?: string;
-  ref?: string;
+  ref?: string | { type: string; value: unknown; hash?: string } | null;
   ext?: Record<string, unknown>;
   ext_crit?: string[];
-  sig?: string;
+  sig?: string | Record<string, unknown>;
 }
 
 export interface CreateEventRequest {
@@ -29,7 +29,7 @@ export interface CreateEventRequest {
   who?: string;
   what: unknown;
   aud?: string;
-  ref?: string;
+  ref?: string | { type: string; value: unknown; hash?: string } | null;
   ttl_minutes?: number;
   digest_only_who?: boolean;
   ext?: Record<string, unknown>;
@@ -57,6 +57,7 @@ export interface VerifyEventRequest {
   event: JEPEvent | Record<string, unknown>;
   mode?: string;
   consume_nonce?: boolean;
+  expected_audience?: string;
 }
 
 export interface HealthResponse {
@@ -88,8 +89,8 @@ export class JEPClient {
   health(): Promise<HealthResponse>;
   judgment(who: string, what: unknown, options?: Partial<CreateEventRequest>): Promise<EventResponse>;
   delegation(who: string, what: unknown, options?: Partial<CreateEventRequest>): Promise<EventResponse>;
-  termination(who: string, what: unknown, ref?: string, options?: Partial<CreateEventRequest>): Promise<EventResponse>;
-  verification(who: string, what: unknown, ref: string, options?: Partial<CreateEventRequest>): Promise<EventResponse>;
+  termination(who: string, what: unknown, ref?: string | { type: string; value: unknown; hash?: string } | null, options?: Partial<CreateEventRequest>): Promise<EventResponse>;
+  verification(who: string, what: unknown, ref: string | { type: string; value: unknown; hash?: string }, options?: Partial<CreateEventRequest>): Promise<EventResponse>;
 }
 
 export function eventToJSON(event: unknown): string;

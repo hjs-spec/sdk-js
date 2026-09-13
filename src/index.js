@@ -90,7 +90,7 @@ export class JEPClient {
     if (!["J", "D", "T", "V"].includes(request.verb)) {
       throw new JEPValidationError("verb must be J, D, T, or V");
     }
-    if (!Object.prototype.hasOwnProperty.call(request, "what") || request.what === undefined || request.what === null) {
+    if (!Object.prototype.hasOwnProperty.call(request, "what") || request.what === undefined) {
       throw new JEPValidationError("what is required");
     }
   }
