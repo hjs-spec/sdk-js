@@ -4,7 +4,7 @@ The 0.6.2 source/types and GitHub tarball can be used now. Automatic releases do
 
 # Recover npm publication
 
-The GitHub release `v0.6.1` exists. npm publication is still blocked by registry authentication/authorization (`E404`). The recovery workflow publishes the existing release tarball and does not create or replace a GitHub release.
+The current GitHub release is `v0.6.2`. Earlier registry attempts returned authentication/authorization errors (`E404`); this is historical failure evidence, not a fresh diagnosis of the account. Publication remains paused until explicitly requested. The recovery workflow publishes the existing release tarball and does not create or replace a GitHub release.
 
 ## Configure the npm account
 
@@ -26,12 +26,12 @@ See [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/) for the
 
 ## Run recovery
 
-Open [Publish existing release to npm](https://github.com/hjs-spec/sdk-js/actions/workflows/registry.yml), choose **Run workflow**, and select `main`. Run the current workflow after adding credentials; rerunning an older run uses its older workflow definition.
+After publication is explicitly resumed, open [Publish existing release to npm](https://github.com/hjs-spec/sdk-js/actions/workflows/registry.yml), choose **Run workflow**, and select `main`. Run the current workflow after adding credentials; rerunning an older run uses its older workflow definition.
 
 Keep the failure status until publication succeeds. Do not rerun the entire `release.yml` workflow for this version: its GitHub release step intentionally refuses to overwrite an existing version.
 
 After success, verify the actual registry result:
 
 ```sh
-npm view @hjs-spec/jep-sdk-js@0.6.1 version
+npm view @hjs-spec/jep-sdk-js@0.6.2 version
 ```
