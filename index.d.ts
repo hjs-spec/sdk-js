@@ -41,8 +41,10 @@ export interface ValidationResult {
   level: number;
   mode: string;
   profile: string;
+  /** Absent on older API responses. */
+  conformance_class?: string;
   scopes?: string[];
-  event_hash?: string;
+  event_hash?: string | null;
   warnings?: Array<Record<string, unknown>>;
   errors?: Array<Record<string, unknown>>;
 }

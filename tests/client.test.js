@@ -192,3 +192,13 @@ test("preserves explicit null judgment content and acceptance context", async ()
   assert.equal(requests[1].expected_audience, "receiver");
   assert.equal(requests[1].event.ref, null);
 });
+
+test("retains complete conformance results and supports older responses", async () => {
+  for (const payload of [
+    {valid:true,level:1,mode:"archival",profile:"jep-core-0.6",conformance_class:"JEP-Baseline-Ed25519-JWS-JCS-0.6",event_hash:null,warnings:[{code:"ACCEPTANCE_NOT_CHECKED",message:"archival",level:1,recoverable:false}],errors:[]},
+    {valid:true,level:1,mode:"archival",profile:"jep-core-0.6"}
+  ]) {
+    const client = new JEPClient({fetchImpl: async () => new Response(JSON.stringify(payload), {status:200})});
+    assert.deepEqual(await client.verifyEvent({event:{jep:"1"}}), payload);
+  }
+});

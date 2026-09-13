@@ -1,3 +1,7 @@
+# npm publication is paused
+
+The 0.6.2 source/types and GitHub tarball can be used now. Automatic releases do not publish to npm; the release workflow defaults `publish_npm` to false. The existing registry recovery workflow is reserved for a future explicit publication request.
+
 # Recover npm publication
 
 The GitHub release `v0.6.1` exists. npm publication is still blocked by registry authentication/authorization (`E404`). The recovery workflow publishes the existing release tarball and does not create or replace a GitHub release.
