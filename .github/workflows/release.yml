@@ -2,7 +2,7 @@ name: Publish versioned release
 on:
   push:
     branches: [main]
-    paths: [VERSION, '.github/workflows/release.yml']
+    paths: [VERSION]
   workflow_dispatch:
 permissions:
   contents: read
@@ -56,4 +56,4 @@ jobs:
         with:
           name: distributions
           path: dist/
-      - run: npm publish dist/*.tgz --access public --provenance
+      - run: npm publish ./dist/*.tgz --access public --provenance
