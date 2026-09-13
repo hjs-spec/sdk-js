@@ -1,6 +1,6 @@
 {
   "name": "@hjs-spec/jep-sdk-js",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "JavaScript SDK seed for creating and verifying JEP v0.6 events through the JEP API",
   "type": "module",
   "main": "src/index.js",
@@ -29,11 +29,20 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/hjs-spec/jep-sdk-js.git"
+    "url": "https://github.com/hjs-spec/sdk-js.git"
   },
   "bugs": {
-    "url": "https://github.com/hjs-spec/jep-sdk-js/issues"
+    "url": "https://github.com/hjs-spec/sdk-js/issues"
   },
-  "homepage": "https://github.com/hjs-spec/jep-sdk-js",
-  "types": "index.d.ts"
+  "homepage": "https://github.com/hjs-spec/sdk-js",
+  "types": "index.d.ts",
+  "files": [
+    "src",
+    "index.d.ts",
+    "README.md",
+    "HARDENING.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }
