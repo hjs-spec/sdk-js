@@ -178,3 +178,17 @@ test("eventToJSON returns formatted JSON", () => {
   const text = eventToJSON({ jep: "1", verb: "J" });
   assert.match(text, /"jep": "1"/);
 });
+
+
+test("preserves explicit null judgment content and acceptance context", async () => {
+  const requests = [];
+  const client = new JEPClient({fetchImpl: async (_url, options) => {
+    requests.push(JSON.parse(options.body));
+    return new Response(JSON.stringify({valid:true}), {status:200, headers:{"content-type":"application/json"}});
+  }});
+  await client.createEvent({verb:"J", what:null});
+  assert.equal(requests[0].what, null);
+  await client.verifyEvent({event:{jep:"1", ref:null}, mode:"acceptance", expected_audience:"receiver"});
+  assert.equal(requests[1].expected_audience, "receiver");
+  assert.equal(requests[1].event.ref, null);
+});
