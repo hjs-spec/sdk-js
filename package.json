@@ -1,6 +1,6 @@
 {
   "name": "@hjs-spec/jep-sdk-js",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "JavaScript SDK for creating and verifying JEP Core 0.7 events through the JEP API",
   "type": "module",
   "main": "src/index.js",

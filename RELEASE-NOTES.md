@@ -1,11 +1,14 @@
-# JEP Core 0.7 migration
+# Release 0.7.1 — JEP Core 0.7
 
-- Default API path is now `/v0.7/events/*`.
-- Events use stable `id` and no longer require Core `nonce`.
+- Default API path is `/v0.7/events/*`.
+- Events use stable `id` and no longer require a Core `nonce`.
 - Validation results use `status`, independent `checks`, `event_identity`, and optional `acceptance`.
 - D/T/V Core minimum shapes are validated before requests are sent.
-- Historical pre-0.7 verification remains explicit; there is no automatic fallback.
+- Historical pre-0.7 handling remains explicit; there is no automatic fallback.
+- Event Hash remains exact-artifact identity and MUST NOT be treated as stable Event Identity.
+- Chain and policy semantics are not inferred as JEP Core behavior.
+- `conformance_class` is preserved when the API returns it.
 
+Protocol target: JEP Core 0.7, wire major `jep: "1"`.
 
-Preserve the API conformance_class field in validation results. Older API responses remain supported. Protocol remains JEP-Core-0.6 / wire version "1".
-This release publishes a GitHub tarball only; npm publication is paused.
+GitHub tarball and npm publication run after the test and version-consistency gates. Registry delivery requires an authorized npm publisher; its result is tracked separately from the GitHub release.
