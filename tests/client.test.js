@@ -44,11 +44,10 @@ function startServer() {
         event,
         event_hash: "sha256:abc",
         validation: {
-          valid: true,
-          level: 1,
+          status: "valid",
           mode: "archival",
-          profile: "jep-core-0.6",
-          scopes: ["syntax"],
+          profile: "jep-core-0.7",
+          checks: { syntax: "pass", cryptographic: "pass", event_identity: "pass" },
           event_hash: "sha256:abc",
           warnings: [],
           errors: [],
@@ -59,11 +58,10 @@ function startServer() {
 
     if (req.method === "POST" && req.url === "/v0.7/events/verify") {
       res.end(JSON.stringify({
-        valid: true,
-        level: 1,
+        status: "valid",
         mode: payload.mode || "archival",
-        profile: "jep-core-0.6",
-        scopes: ["syntax"],
+        profile: "jep-core-0.7",
+        checks: { syntax: "pass", cryptographic: "pass", event_identity: "pass" },
         event_hash: "sha256:def",
         warnings: [],
         errors: [],
