@@ -9,6 +9,7 @@ import {
   Verb,
   eventToJSON,
   isValidationResult,
+  isLegacyValidationResult,
 } from "../src/index.js";
 
 function startServer() {
@@ -21,18 +22,18 @@ function startServer() {
     res.setHeader("content-type", "application/json");
 
     if (req.method === "GET" && req.url === "/health") {
-      res.end(JSON.stringify({ ok: true, profile: "jep-core-0.6" }));
+      res.end(JSON.stringify({ ok: true, profile: "jep-core-0.7" }));
       return;
     }
 
-    if (req.method === "POST" && req.url === "/events/create") {
+    if (req.method === "POST" && req.url === "/v0.7/events/create") {
       const event = {
         jep: "1",
+        id: payload.id || "urn:uuid:00000000-0000-7000-8000-000000000001",
         verb: payload.verb,
         who: payload.who || "did:example:agent",
         when: 1234567890,
         what: payload.what,
-        nonce: "nonce-1",
         aud: payload.aud,
         ref: payload.ref,
         ext: payload.ext,
@@ -56,7 +57,7 @@ function startServer() {
       return;
     }
 
-    if (req.method === "POST" && req.url === "/events/verify") {
+    if (req.method === "POST" && req.url === "/v0.7/events/verify") {
       res.end(JSON.stringify({
         valid: true,
         level: 1,
@@ -85,7 +86,7 @@ function startServer() {
   });
 }
 
-test("createEvent calls /events/create", async () => {
+test("createEvent calls /v0.7/events/create", async () => {
   const srv = await startServer();
   try {
     const client = new JEPClient({ baseUrl: srv.url });
@@ -98,30 +99,30 @@ test("createEvent calls /events/create", async () => {
     });
     assert.equal(resp.event_hash, "sha256:abc");
     assert.equal(resp.event.verb, "J");
-    assert.equal(resp.validation.valid, true);
+    assert.equal(resp.validation.status, "valid");
     assert.equal(resp.event.ext["https://example.org/profile"].name, "demo");
   } finally {
     await srv.close();
   }
 });
 
-test("verifyEvent calls /events/verify", async () => {
+test("verifyEvent calls /v0.7/events/verify", async () => {
   const srv = await startServer();
   try {
     const client = new JEPClient({ baseUrl: srv.url });
     const result = await client.verifyEvent({
       event: {
         jep: "1",
+        id: "urn:uuid:00000000-0000-7000-8000-000000000001",
         verb: "J",
         who: "did:example:agent",
         when: 123,
-        what: "sha256:abc",
-        nonce: "nonce-1",
+        what: "sha256:" + "a".repeat(64),
         sig: "header..sig",
       },
       mode: "archival",
     });
-    assert.equal(result.valid, true);
+    assert.equal(result.status, "valid");
     assert.equal(result.profile, "jep-core-0.6");
     assert.equal(isValidationResult(result), true);
   } finally {
@@ -135,7 +136,7 @@ test("health calls /health", async () => {
     const client = new JEPClient({ baseUrl: srv.url });
     const health = await client.health();
     assert.equal(health.ok, true);
-    assert.equal(health.profile, "jep-core-0.6");
+    assert.equal(health.profile, "jep-core-0.7");
   } finally {
     await srv.close();
   }
@@ -184,21 +185,29 @@ test("preserves explicit null judgment content and acceptance context", async ()
   const requests = [];
   const client = new JEPClient({fetchImpl: async (_url, options) => {
     requests.push(JSON.parse(options.body));
-    return new Response(JSON.stringify({valid:true}), {status:200, headers:{"content-type":"application/json"}});
+    return new Response(JSON.stringify({status:"valid",profile:"jep-core-0.7",checks:{}}), {status:200, headers:{"content-type":"application/json"}});
   }});
   await client.createEvent({verb:"J", what:null});
   assert.equal(requests[0].what, null);
-  await client.verifyEvent({event:{jep:"1", ref:null}, mode:"acceptance", expected_audience:"receiver"});
+  await client.verifyEvent({event:{jep:"1", id:"urn:uuid:x", verb:"J", who:"a", when:1, what:{claim:"x"}, sig:"h..s"}, mode:"acceptance", expected_audience:"receiver"});
   assert.equal(requests[1].expected_audience, "receiver");
-  assert.equal(requests[1].event.ref, null);
+  assert.equal(requests[1].event.id, "urn:uuid:x");
 });
 
-test("retains complete conformance results and supports older responses", async () => {
-  for (const payload of [
-    {valid:true,level:1,mode:"archival",profile:"jep-core-0.6",conformance_class:"JEP-Baseline-Ed25519-JWS-JCS-0.6",event_hash:null,warnings:[{code:"ACCEPTANCE_NOT_CHECKED",message:"archival",level:1,recoverable:false}],errors:[]},
-    {valid:true,level:1,mode:"archival",profile:"jep-core-0.6"}
-  ]) {
-    const client = new JEPClient({fetchImpl: async () => new Response(JSON.stringify(payload), {status:200})});
-    assert.deepEqual(await client.verifyEvent({event:{jep:"1"}}), payload);
-  }
+test("recognizes current and legacy validation results explicitly", () => {
+  const current = {status:"valid",mode:"archival",profile:"jep-core-0.7",checks:{syntax:"pass"}};
+  const legacy = {valid:true,level:1,mode:"archival",profile:"jep-core-0.6"};
+  assert.equal(isValidationResult(current), true);
+  assert.equal(isValidationResult(legacy), false);
+  assert.equal(isLegacyValidationResult(legacy), true);
+});
+
+test("legacy methods use explicit pre-0.7 routes", async () => {
+  const requests = [];
+  const client = new JEPClient({fetchImpl: async (url, options) => {
+    requests.push({url, body: options.body ? JSON.parse(options.body) : null});
+    return new Response(JSON.stringify({valid:true,level:1,mode:"archival",profile:"jep-core-0.6"}), {status:200});
+  }});
+  await client.verifyLegacyEvent({event:{jep:"1",verb:"J",who:"a",when:1,what:{claim:"x"},nonce:"n",sig:"h..s"}});
+  assert.match(requests[0].url, /\/events\/verify$/);
 });
