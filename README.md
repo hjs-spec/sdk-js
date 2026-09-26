@@ -22,9 +22,13 @@ causality, regulatory compliance, or policy outcome.
 
 ## Installation
 
+The verified 0.7.1 tarball is available from GitHub Releases. npm registry publication is awaiting publisher authorization (`ENEEDAUTH` in the release job).
+
 ```bash
-npm install @hjs-spec/jep-sdk-js
+npm install https://github.com/hjs-spec/sdk-js/releases/download/v0.7.1/hjs-spec-jep-sdk-js-0.7.1.tgz
 ```
+
+The installed import name remains `@hjs-spec/jep-sdk-js`. See the [delivery status](https://github.com/hjs-spec/.github/blob/main/DELIVERY-2026-09-26.md) for registry progress.
 
 ## Quick start
 
