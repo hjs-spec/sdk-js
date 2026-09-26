@@ -1,34 +1,32 @@
-> Current default: **JEP Core 0.7**. Historical pre-0.7 compatibility, where exposed, is explicit and never selected by heuristic fallback.
+# JEP JavaScript SDK — JEP Core 0.7
 
-# JEP JavaScript SDK v0.6
+JavaScript client for the current [JEP Core 0.7](https://github.com/hjs-spec/jep-core) reference API.
 
-JavaScript client for the [JEP-Core-0.6](https://github.com/hjs-spec/jep-v06) API (wire version `"1"`). SDK release versions are separate from the protocol version. See the protocol repository for core semantics, profiles, and public drafts.
-
-This SDK targets the current JEP API shape:
+The default client uses:
 
 ```text
-POST /events/create
-POST /events/verify
+POST /v0.7/events/create
+POST /v0.7/events/verify
 GET  /health
 ```
 
+Historical pre-0.7 compatibility is explicit through `createEventLegacy()` and
+`verifyEventLegacy()`. A failed 0.7 validation is never heuristically retried
+as 0.6.
+
 ## Status
 
-Experimental implementation seed.
-
-This SDK does not define new JEP-Core semantics and does not determine legal liability, factual truth, regulatory compliance, or complete-log availability.
+Experimental reference SDK. It does not define new JEP Core semantics and
+does not determine factual truth, authorization validity, legal effect,
+causality, regulatory compliance, or policy outcome.
 
 ## Installation
 
-The `v0.6.2` tarball is available from [GitHub Releases](https://github.com/hjs-spec/sdk-js/releases/tag/v0.6.2). npm publication is paused; see [publication recovery](https://github.com/hjs-spec/sdk-js/blob/main/PUBLISHING.md). Install the release asset directly:
-
 ```bash
-npm install https://github.com/hjs-spec/sdk-js/releases/download/v0.6.2/hjs-spec-jep-sdk-js-0.6.2.tgz
+npm install @hjs-spec/jep-sdk-js
 ```
 
-## Quick Start
-
-Start the [local API](https://github.com/hjs-spec/jep-api#run-locally) before running this example. Verification uses that API's configured trusted keys.
+## Quick start
 
 ```js
 import { JEPClient, Verb } from "@hjs-spec/jep-sdk-js";
@@ -43,6 +41,7 @@ const created = await client.createEvent({
   what: { claim: "approve" },
 });
 
+console.log(created.event.id);
 console.log(created.event_hash);
 
 const verified = await client.verifyEvent({
@@ -50,10 +49,39 @@ const verified = await client.verifyEvent({
   mode: "archival",
 });
 
-console.log(verified.valid);
+console.log(verified.status, verified.checks);
 ```
 
-## Core Exports
+## JEP Core 0.7 model
+
+- Event Identity is `(who,id)`; `id` is required.
+- Core does not require a top-level nonce.
+- Event Hash identifies an exact signed artifact, not Event Identity.
+- Validation uses independent checks rather than cumulative Validation Levels.
+- Acceptance may return `accepted` or `already_accepted`.
+- D requires `what.delegatee` and `what.scope`.
+- T requires `ref` and `what.termination_scope`.
+- V requires `ref`, `what.verification_scope`, and `what.result`.
+- Logical JEP event references use Event Identity; exact-artifact pinning may
+  additionally carry Event Hash.
+
+The normative Core source and schemas are maintained in
+[jep-core](https://github.com/hjs-spec/jep-core).
+
+## Legacy pre-0.7
+
+Legacy handling is explicit:
+
+```js
+await client.verifyEventLegacy({
+  event: legacyEvent,
+  mode: "archival",
+});
+```
+
+Do not interpret a failed 0.7 validation as permission to retry a legacy decoder.
+
+## Core exports
 
 - `JEPClient`
 - `Verb`
@@ -61,37 +89,25 @@ console.log(verified.valid);
 - `JEPAPIError`
 - `eventToJSON`
 - `isValidationResult`
-
-## API and helpers
-
-The quickstart above demonstrates event creation and archival verification. The client also exposes helpers for the four verbs; see [client methods and types](src/index.js) for signatures and options.
-
-Claim fields and reference requirements are defined in the [Core-0.6 event schema](https://github.com/hjs-spec/jep-v06/blob/main/schemas/jep-event.schema.json). For an event reference, use the actual returned event hash.
-
-### Health
-
-```js
-const health = await client.health();
-```
-
-## Extensions
-
-This example carries non-critical application metadata; the core API does not validate its semantics. Mark an extension critical only when the target verifier implements it, or the API will reject it.
-
-```js
-await client.createEvent({
-  verb: Verb.Judgment,
-  who: "did:example:agent",
-  what: { claim: "approve" },
-  ext: {
-    "https://example.org/profile": { name: "demo" },
-  },
-});
-```
+- `JEP_CORE_PROFILE`
+- `LEGACY_JEP_CORE_PROFILE`
 
 ## Validation results
 
-Validation results preserve the API's `conformance_class` and diagnostic fields (`code`, `message`, `level`, `recoverable`). Older servers may omit the class; the SDK does not infer conformance.
+Current 0.7 results expose:
+
+- `status`: `valid | invalid | indeterminate`
+- `checks`: independent check results
+- `event_identity`
+- `event_hash`
+- optional `acceptance`
+- `warnings` / `errors`
+
+## Extensions
+
+Application metadata belongs in `ext`. Unknown critical extensions fail
+`extension_processing`; non-critical unknown extensions may be ignored by a
+generic Core verifier.
 
 ## Testing
 
@@ -99,17 +115,12 @@ Validation results preserve the API's `conformance_class` and diagnostic fields 
 npm test
 ```
 
-Tests use a local in-process HTTP server and do not require a live JEP API.
+## Related repositories
 
-## Related Repositories
-
-- JEP Core 0.7: https://github.com/hjs-spec/jep-v06
-- JEP API v0.6: https://github.com/hjs-spec/jep-api
-- JEP Python SDK v0.6: https://github.com/hjs-spec/sdk-py
-- JEP Go SDK v0.6: https://github.com/hjs-spec/sdk-go
-- JEP CLI v0.6: https://github.com/hjs-spec/cli
-- HJS v0.5: https://github.com/hjs-spec/hjs-05
-- JAC v0.5: https://github.com/hjs-spec/jac-agent-02
+- JEP Core 0.7: https://github.com/hjs-spec/jep-core
+- JEP API: https://github.com/hjs-spec/jep-api
+- Python SDK: https://github.com/hjs-spec/sdk-py
+- Go SDK: https://github.com/hjs-spec/sdk-go
 
 ## License
 
