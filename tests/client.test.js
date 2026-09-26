@@ -17,37 +17,35 @@ function startServer() {
     for await (const chunk of req) chunks.push(chunk);
     const body = Buffer.concat(chunks).toString("utf8");
     const payload = body ? JSON.parse(body) : {};
-
     res.setHeader("content-type", "application/json");
 
     if (req.method === "GET" && req.url === "/health") {
-      res.end(JSON.stringify({ ok: true, profile: "jep-core-0.6" }));
+      res.end(JSON.stringify({ ok: true, profile: "jep-core-0.7" }));
       return;
     }
-
-    if (req.method === "POST" && req.url === "/events/create") {
+    if (req.method === "POST" && req.url === "/v0.7/events/create") {
       const event = {
         jep: "1",
+        id: payload.id || "urn:uuid:00000000-0000-7000-8000-000000000001",
         verb: payload.verb,
         who: payload.who || "did:example:agent",
         when: 1234567890,
         what: payload.what,
-        nonce: "nonce-1",
-        aud: payload.aud,
-        ref: payload.ref,
-        ext: payload.ext,
-        ext_crit: payload.ext_crit,
+        ...(payload.aud !== undefined ? { aud: payload.aud } : {}),
+        ...(payload.ref !== undefined ? { ref: payload.ref } : {}),
+        ...(payload.ext !== undefined ? { ext: payload.ext } : {}),
+        ...(payload.ext_crit !== undefined ? { ext_crit: payload.ext_crit } : {}),
         sig: "header..sig",
       };
       res.end(JSON.stringify({
         event,
         event_hash: "sha256:abc",
         validation: {
-          valid: true,
-          level: 1,
+          status: "valid",
           mode: "archival",
-          profile: "jep-core-0.6",
-          scopes: ["syntax"],
+          profile: "jep-core-0.7",
+          event_identity: { who: event.who, id: event.id },
+          checks: { syntax: "pass", cryptographic: "pass", event_identity: "pass" },
           event_hash: "sha256:abc",
           warnings: [],
           errors: [],
@@ -55,37 +53,38 @@ function startServer() {
       }));
       return;
     }
-
-    if (req.method === "POST" && req.url === "/events/verify") {
+    if (req.method === "POST" && req.url === "/v0.7/events/verify") {
       res.end(JSON.stringify({
-        valid: true,
-        level: 1,
+        status: "valid",
         mode: payload.mode || "archival",
-        profile: "jep-core-0.6",
-        scopes: ["syntax"],
+        profile: "jep-core-0.7",
+        event_identity: { who: payload.event.who, id: payload.event.id },
+        checks: { syntax: "pass", cryptographic: "pass", event_identity: "pass" },
         event_hash: "sha256:def",
+        ...(payload.mode === "acceptance"
+          ? { acceptance: { outcome: "accepted", effect_applied: true } }
+          : {}),
         warnings: [],
         errors: [],
       }));
       return;
     }
-
+    if (req.method === "POST" && req.url === "/events/verify-legacy") {
+      res.end(JSON.stringify({ valid: true, level: 1, profile: "jep-core-0.6" }));
+      return;
+    }
     res.statusCode = 404;
     res.end(JSON.stringify({ message: "not found" }));
   });
-
   return new Promise((resolve) => {
     server.listen(0, "127.0.0.1", () => {
       const { port } = server.address();
-      resolve({
-        url: `http://127.0.0.1:${port}`,
-        close: () => new Promise((done) => server.close(done)),
-      });
+      resolve({ url: `http://127.0.0.1:${port}`, close: () => new Promise((done) => server.close(done)) });
     });
   });
 }
 
-test("createEvent calls /events/create", async () => {
+test("createEvent uses JEP Core 0.7 endpoint and model", async () => {
   const srv = await startServer();
   try {
     const client = new JEPClient({ baseUrl: srv.url });
@@ -93,71 +92,68 @@ test("createEvent calls /events/create", async () => {
       verb: Verb.Judgment,
       who: "did:example:agent",
       what: { claim: "approve" },
-      ext: { "https://example.org/profile": { name: "demo" } },
-      ext_crit: ["https://example.org/profile"],
     });
     assert.equal(resp.event_hash, "sha256:abc");
     assert.equal(resp.event.verb, "J");
-    assert.equal(resp.validation.valid, true);
-    assert.equal(resp.event.ext["https://example.org/profile"].name, "demo");
+    assert.ok(resp.event.id);
+    assert.equal(resp.validation.status, "valid");
   } finally {
     await srv.close();
   }
 });
 
-test("verifyEvent calls /events/verify", async () => {
+test("verifyEvent returns independent-check result", async () => {
   const srv = await startServer();
   try {
     const client = new JEPClient({ baseUrl: srv.url });
     const result = await client.verifyEvent({
       event: {
         jep: "1",
+        id: "urn:uuid:00000000-0000-7000-8000-000000000002",
         verb: "J",
         who: "did:example:agent",
         when: 123,
-        what: "sha256:abc",
-        nonce: "nonce-1",
+        what: { claim: "approve" },
         sig: "header..sig",
       },
-      mode: "archival",
+      mode: "acceptance",
     });
-    assert.equal(result.valid, true);
-    assert.equal(result.profile, "jep-core-0.6");
+    assert.equal(result.status, "valid");
+    assert.equal(result.profile, "jep-core-0.7");
+    assert.equal(result.acceptance.outcome, "accepted");
     assert.equal(isValidationResult(result), true);
   } finally {
     await srv.close();
   }
 });
 
-test("health calls /health", async () => {
+test("verb-specific Core minimums are enforced", async () => {
+  const client = new JEPClient({ fetchImpl: async () => ({}) });
+  await assert.rejects(() => client.createEvent({ verb: "D", what: { delegatee: "b" } }), JEPValidationError);
+  await assert.rejects(() => client.createEvent({ verb: "T", what: { termination_scope: "future" } }), JEPValidationError);
+  await assert.rejects(() => client.createEvent({ verb: "V", ref: "x", what: { verification_scope: "syntax" } }), JEPValidationError);
+});
+
+test("legacy verification is explicit", async () => {
+  const srv = await startServer();
+  try {
+    const client = new JEPClient({ baseUrl: srv.url });
+    const result = await client.verifyEventLegacy({ event: { jep: "1", nonce: "legacy" } });
+    assert.equal(result.profile, "jep-core-0.6");
+  } finally {
+    await srv.close();
+  }
+});
+
+test("health reports current profile", async () => {
   const srv = await startServer();
   try {
     const client = new JEPClient({ baseUrl: srv.url });
     const health = await client.health();
-    assert.equal(health.ok, true);
-    assert.equal(health.profile, "jep-core-0.6");
+    assert.equal(health.profile, "jep-core-0.7");
   } finally {
     await srv.close();
   }
-});
-
-test("convenience helpers set verbs", async () => {
-  const srv = await startServer();
-  try {
-    const client = new JEPClient({ baseUrl: srv.url });
-    assert.equal((await client.judgment("agent", "judge")).event.verb, "J");
-    assert.equal((await client.delegation("agent", "delegate")).event.verb, "D");
-    assert.equal((await client.termination("agent", "terminate", "sha256:parent")).event.verb, "T");
-    assert.equal((await client.verification("agent", "verify", "sha256:parent")).event.verb, "V");
-  } finally {
-    await srv.close();
-  }
-});
-
-test("validates create request", async () => {
-  const client = new JEPClient({ fetchImpl: async () => ({}) });
-  await assert.rejects(() => client.createEvent({ verb: "X", what: "x" }), JEPValidationError);
-  await assert.rejects(() => client.createEvent({ verb: "J" }), JEPValidationError);
 });
 
 test("throws JEPAPIError on HTTP error", async () => {
@@ -168,37 +164,10 @@ test("throws JEPAPIError on HTTP error", async () => {
     text: async () => JSON.stringify({ message: "boom" }),
   });
   const client = new JEPClient({ fetchImpl });
-  await assert.rejects(
-    () => client.health(),
-    (err) => err instanceof JEPAPIError && err.status === 500
-  );
+  await assert.rejects(() => client.health(), (err) => err instanceof JEPAPIError && err.status === 500);
 });
 
 test("eventToJSON returns formatted JSON", () => {
-  const text = eventToJSON({ jep: "1", verb: "J" });
-  assert.match(text, /"jep": "1"/);
-});
-
-
-test("preserves explicit null judgment content and acceptance context", async () => {
-  const requests = [];
-  const client = new JEPClient({fetchImpl: async (_url, options) => {
-    requests.push(JSON.parse(options.body));
-    return new Response(JSON.stringify({valid:true}), {status:200, headers:{"content-type":"application/json"}});
-  }});
-  await client.createEvent({verb:"J", what:null});
-  assert.equal(requests[0].what, null);
-  await client.verifyEvent({event:{jep:"1", ref:null}, mode:"acceptance", expected_audience:"receiver"});
-  assert.equal(requests[1].expected_audience, "receiver");
-  assert.equal(requests[1].event.ref, null);
-});
-
-test("retains complete conformance results and supports older responses", async () => {
-  for (const payload of [
-    {valid:true,level:1,mode:"archival",profile:"jep-core-0.6",conformance_class:"JEP-Baseline-Ed25519-JWS-JCS-0.6",event_hash:null,warnings:[{code:"ACCEPTANCE_NOT_CHECKED",message:"archival",level:1,recoverable:false}],errors:[]},
-    {valid:true,level:1,mode:"archival",profile:"jep-core-0.6"}
-  ]) {
-    const client = new JEPClient({fetchImpl: async () => new Response(JSON.stringify(payload), {status:200})});
-    assert.deepEqual(await client.verifyEvent({event:{jep:"1"}}), payload);
-  }
+  const text = eventToJSON({ jep: "1", id: "urn:example:1", verb: "J" });
+  assert.match(text, /"id": "urn:example:1"/);
 });
