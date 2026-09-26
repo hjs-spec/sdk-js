@@ -1,3 +1,5 @@
+> Historical **Core 0.6** implementation record. Current request shapes and validation results are documented in [README](README.md).
+
 # Implementation hardening — September 2026
 
 Align client types and request validation with the v0.6 API.

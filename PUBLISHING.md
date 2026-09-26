@@ -1,37 +1,27 @@
-# npm publication is paused
+# npm publication
 
-The 0.6.2 source/types and GitHub tarball can be used now. Automatic releases do not publish to npm; the release workflow defaults `publish_npm` to false. The existing registry recovery workflow is reserved for a future explicit publication request.
+GitHub release **v0.7.1** contains the installable tarball. The npm job failed with `ENEEDAUTH`; it is awaiting publisher authorization, not a code fix. See [installation](README.md#installation) and the dated [delivery record](https://github.com/hjs-spec/.github/blob/main/DELIVERY-2026-09-26.md).
 
-# Recover npm publication
+## Workflow behavior
 
-The current GitHub release is `v0.6.2`. Earlier registry attempts returned authentication/authorization errors (`E404`); this is historical failure evidence, not a fresh diagnosis of the account. Publication remains paused until explicitly requested. The recovery workflow publishes the existing release tarball and does not create or replace a GitHub release.
+- `release.yml` runs when `VERSION` changes on `main`, or by manual dispatch. It creates the GitHub release, then attempts npm publication.
+- `registry.yml` downloads the tarball for the checked-out `VERSION` and publishes it without recreating the GitHub release. It runs by manual dispatch or a change to that workflow on `main`.
+- A documentation change does not publish a package.
 
-## Configure the npm account
+## Publisher configuration
 
-The publishing account must be allowed to publish `@hjs-spec/jep-sdk-js` in the npm `@hjs-spec` scope. Owning the GitHub organization alone does not establish npm scope permissions.
+The npm account must be authorized to publish `@hjs-spec/jep-sdk-js` in the `@hjs-spec` scope. GitHub organization ownership alone is insufficient.
 
-When the npm package exists, configure trusted publishing in its npm package settings:
+The workflows support npm trusted publishing for `hjs-spec/sdk-js`, with workflow filename `release.yml` or `registry.yml` and no GitHub environment. If a bootstrap publish token is needed, configure an authorized `NPM_TOKEN` in repository Actions secrets. The workflows supply it only to the publish step. Consult [npm's publisher documentation](https://docs.npmjs.com/trusted-publishers/) for the account setup.
 
-| Field | Value |
-|---|---|
-| GitHub organization | `hjs-spec` |
-| Repository | `sdk-js` |
-| Workflow filename | `registry.yml` for recovery; add `release.yml` for future versions |
-| GitHub environment | Leave empty |
-| Allowed action | Enable direct `npm publish` |
+## Recover the existing release
 
-If initial publication needs a token, add an authorized npm publish token as the repository Actions secret `NPM_TOKEN` in [GitHub settings](https://github.com/hjs-spec/sdk-js/settings/secrets/actions). Both publishing workflows expose it only to the publish step. The token must satisfy the npm account/package publishing policy. npm attempts OIDC first and can then use the supplied token. After trusted publishing succeeds, remove the temporary token.
+After authorization is configured, rerun **only the failed npm job** of the v0.7.1 release, or dispatch `registry.yml` with a revision whose `VERSION` is `0.7.1`.
 
-See [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/) for the account fields and authentication behavior.
-
-## Run recovery
-
-After publication is explicitly resumed, open [Publish existing release to npm](https://github.com/hjs-spec/sdk-js/actions/workflows/registry.yml), choose **Run workflow**, and select `main`. Run the current workflow after adding credentials; rerunning an older run uses its older workflow definition.
-
-Keep the failure status until publication succeeds. Do not rerun the entire `release.yml` workflow for this version: its GitHub release step intentionally refuses to overwrite an existing version.
-
-After success, verify the actual registry result:
+Do not rerun the complete release workflow for an existing version: the GitHub release job refuses to overwrite it. Verify the result with:
 
 ```sh
-npm view @hjs-spec/jep-sdk-js@0.6.2 version
+npm view @hjs-spec/jep-sdk-js@0.7.1 version
 ```
+
+Keep registry status blocked until that publication is confirmed. The original v0.6.2 failure is historical evidence, not the current release.
