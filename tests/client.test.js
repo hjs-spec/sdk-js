@@ -121,7 +121,7 @@ test("verifyEvent calls /v0.7/events/verify", async () => {
       mode: "archival",
     });
     assert.equal(result.status, "valid");
-    assert.equal(result.profile, "jep-core-0.6");
+    assert.equal(result.profile, "jep-core-0.7");
     assert.equal(isValidationResult(result), true);
   } finally {
     await srv.close();
