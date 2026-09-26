@@ -1,9 +1,9 @@
 /**
- * JEP JavaScript SDK v0.6.
+ * JEP JavaScript SDK for JEP Core 0.7.
  *
  * Targets:
- * - POST /events/create
- * - POST /events/verify
+ * - POST /v0.7/events/create
+ * - POST /v0.7/events/verify
  * - GET /health
  *
  * This SDK is an implementation seed. It does not define new JEP-Core
@@ -11,7 +11,7 @@
  */
 
 export const JEP_WIRE_VERSION = "1";
-export const JEP_CORE_PROFILE = "jep-core-0.6";
+export const JEP_CORE_PROFILE = "jep-core-0.7";
 
 export const Verb = Object.freeze({
   Judgment: "J",
@@ -49,10 +49,26 @@ export class JEPClient {
 
   async createEvent(request) {
     this.#validateCreateRequest(request);
-    return this.#request("POST", "/events/create", request);
+    return this.#request("POST", "/v0.7/events/create", request);
   }
 
   async verifyEvent(request) {
+    if (!request || !request.event) {
+      throw new JEPValidationError("event is required");
+    }
+    const { consume_nonce: _legacyConsumeNonce, ...current } = request;
+    return this.#request("POST", "/v0.7/events/verify", {
+      mode: "archival",
+      ...current,
+    });
+  }
+
+  async createLegacyEvent(request) {
+    this.#validateCreateRequest(request);
+    return this.#request("POST", "/events/create", request);
+  }
+
+  async verifyLegacyEvent(request) {
     if (!request || !request.event) {
       throw new JEPValidationError("event is required");
     }
@@ -101,7 +117,7 @@ export class JEPClient {
 
     const headers = {
       "content-type": "application/json",
-      "user-agent": "JEP-JS-SDK/0.6.0",
+      "user-agent": "JEP-JS-SDK/0.7.0",
     };
     if (this.apiKey) {
       headers.authorization = `Bearer ${this.apiKey}`;
@@ -142,5 +158,16 @@ export function eventToJSON(event) {
 }
 
 export function isValidationResult(value) {
-  return Boolean(value && typeof value === "object" && "valid" in value && "profile" in value);
+  return Boolean(
+    value &&
+    typeof value === "object" &&
+    ["valid", "invalid", "indeterminate"].includes(value.status) &&
+    value.profile === JEP_CORE_PROFILE &&
+    value.checks &&
+    typeof value.checks === "object"
+  );
+}
+
+export function isLegacyValidationResult(value) {
+  return Boolean(value && typeof value === "object" && "valid" in value && "level" in value && "profile" in value);
 }
