@@ -1,6 +1,6 @@
 {
-  "name": "@hjs-spec/jep-sdk-js",
-  "version": "0.7.1",
+  "name": "@hjs-api-db/jep-sdk-js",
+  "version": "0.7.2",
   "description": "JavaScript SDK for creating and verifying JEP Core 0.7 events through the JEP API",
   "type": "module",
   "main": "src/index.js",
@@ -14,35 +14,15 @@
     "test": "node --test tests/*.test.js"
   },
   "keywords": [
-    "jep",
-    "jep-sdk",
-    "judgment-events",
-    "jep-api",
-    "event-hash",
-    "validation",
-    "ai-accountability"
+    "jep", "jep-sdk", "judgment-events", "jep-api", "event-hash", "validation", "ai-accountability"
   ],
   "author": "HJS Spec",
   "license": "MIT",
-  "engines": {
-    "node": ">=18"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/hjs-spec/sdk-js.git"
-  },
-  "bugs": {
-    "url": "https://github.com/hjs-spec/sdk-js/issues"
-  },
+  "engines": { "node": ">=18" },
+  "repository": { "type": "git", "url": "https://github.com/hjs-spec/sdk-js.git" },
+  "bugs": { "url": "https://github.com/hjs-spec/sdk-js/issues" },
   "homepage": "https://github.com/hjs-spec/sdk-js",
   "types": "index.d.ts",
-  "files": [
-    "src",
-    "index.d.ts",
-    "README.md",
-    "HARDENING.md"
-  ],
-  "publishConfig": {
-    "access": "public"
-  }
+  "files": ["src", "index.d.ts", "README.md", "HARDENING.md"],
+  "publishConfig": { "access": "public", "registry": "https://registry.npmjs.org/" }
 }
