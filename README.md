@@ -26,16 +26,17 @@ Starting with software 0.7.2, the npm package and import name is
 **`@hjs-api-db/jep-sdk-js`**. The source repository remains
 **`hjs-spec/sdk-js`** on GitHub; npm account scope and GitHub owner are separate.
 
-Until the owner completes the first npm publication, use the GitHub release tarball:
-
-```bash
-npm install https://github.com/hjs-spec/sdk-js/releases/download/v0.7.2/hjs-api-db-jep-sdk-js-0.7.2.tgz
-```
-
-After that version is confirmed on npm, the registry installation is:
+Version 0.7.2 is published on npm. Its public metadata, exact tarball bytes and
+anonymous clean installation/import were [independently verified](https://github.com/hjs-spec/sdk-js/actions/runs/36294562815).
 
 ```bash
 npm install @hjs-api-db/jep-sdk-js@0.7.2
+```
+
+The identical GitHub release tarball remains available:
+
+```bash
+npm install https://github.com/hjs-spec/sdk-js/releases/download/v0.7.2/hjs-api-db-jep-sdk-js-0.7.2.tgz
 ```
 
 Both install the same package and use the new import below. The historical
@@ -43,7 +44,7 @@ Both install the same package and use the new import below. The historical
 they are not republished or silently redirected. Existing users of a historical
 tarball must explicitly change their dependency and import name when adopting
 0.7.2. Runtime source, types, API paths and signed event semantics are unchanged.
-See [PUBLISHING.md](PUBLISHING.md) for first-publication and automatic-release setup.
+See [PUBLISHING.md](PUBLISHING.md) for publication evidence and future automatic-release setup.
 
 ## Quick start
 
