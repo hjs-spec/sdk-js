@@ -22,37 +22,43 @@ causality, regulatory compliance, or policy outcome.
 
 ## Installation
 
-The verified 0.7.1 tarball is available from GitHub Releases. npm registry publication is awaiting publisher authorization (`ENEEDAUTH` in the release job).
+Starting with software 0.7.2, the npm package and import name is
+**`@hjs-api-db/jep-sdk-js`**. The source repository remains
+**`hjs-spec/sdk-js`** on GitHub; npm account scope and GitHub owner are separate.
+
+Until the owner completes the first npm publication, use the GitHub release tarball:
 
 ```bash
-npm install https://github.com/hjs-spec/sdk-js/releases/download/v0.7.1/hjs-spec-jep-sdk-js-0.7.1.tgz
+npm install https://github.com/hjs-spec/sdk-js/releases/download/v0.7.2/hjs-api-db-jep-sdk-js-0.7.2.tgz
 ```
 
-The installed import name remains `@hjs-spec/jep-sdk-js`. See the [delivery status](https://github.com/hjs-spec/.github/blob/main/DELIVERY-2026-09-26.md) for registry progress.
+After that version is confirmed on npm, the registry installation is:
+
+```bash
+npm install @hjs-api-db/jep-sdk-js@0.7.2
+```
+
+Both install the same package and use the new import below. The historical
+`@hjs-spec/jep-sdk-js` tarballs, including v0.7.1, are preserved unchanged;
+they are not republished or silently redirected. Existing users of a historical
+tarball must explicitly change their dependency and import name when adopting
+0.7.2. Runtime source, types, API paths and signed event semantics are unchanged.
+See [PUBLISHING.md](PUBLISHING.md) for first-publication and automatic-release setup.
 
 ## Quick start
 
 ```js
-import { JEPClient, Verb } from "@hjs-spec/jep-sdk-js";
+import { JEPClient, Verb } from "@hjs-api-db/jep-sdk-js";
 
-const client = new JEPClient({
-  baseUrl: "http://127.0.0.1:8000",
-});
-
+const client = new JEPClient({ baseUrl: "http://127.0.0.1:8000" });
 const created = await client.createEvent({
   verb: Verb.Judgment,
   who: "did:example:agent-789",
   what: { claim: "approve" },
 });
-
 console.log(created.event.id);
 console.log(created.event_hash);
-
-const verified = await client.verifyEvent({
-  event: created.event,
-  mode: "archival",
-});
-
+const verified = await client.verifyEvent({ event: created.event, mode: "archival" });
 console.log(verified.status, verified.checks);
 ```
 
@@ -77,10 +83,7 @@ The normative Core source and schemas are maintained in
 Legacy handling is explicit:
 
 ```js
-await client.verifyEventLegacy({
-  event: legacyEvent,
-  mode: "archival",
-});
+await client.verifyEventLegacy({ event: legacyEvent, mode: "archival" });
 ```
 
 Do not interpret a failed 0.7 validation as permission to retry a legacy decoder.
@@ -118,6 +121,10 @@ generic Core verifier.
 ```bash
 npm test
 ```
+
+Tests include real loopback HTTP client behavior, npm scope/metadata checks and
+an offline installation/import of the actual packed archive in a fresh directory.
+They do not prove live-service readiness or external truth.
 
 ## Related repositories
 

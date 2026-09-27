@@ -1,8 +1,5 @@
 name: Publish existing release to npm
 on:
-  push:
-    branches: [main]
-    paths: ['.github/workflows/registry.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -17,9 +14,9 @@ jobs:
         with:
           node-version: '24'
           registry-url: https://registry.npmjs.org
-      - run: gh release download "v$(cat VERSION)" -p '*.tgz' --dir dist
+      - name: Download this version's new-scope release only
+        run: gh release download "v$(cat VERSION)" -p "hjs-api-db-jep-sdk-js-$(cat VERSION).tgz" --dir dist
         env:
           GH_TOKEN: ${{ github.token }}
-      - run: npm publish ./dist/*.tgz --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish through separately configured registry.yml trust
+        run: npm publish ./dist/*.tgz --access public --provenance --registry=https://registry.npmjs.org/

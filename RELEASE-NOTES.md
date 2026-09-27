@@ -1,14 +1,9 @@
-# Release 0.7.1 — JEP Core 0.7
+# Release 0.7.2
 
-- Default API path is `/v0.7/events/*`.
-- Events use stable `id` and no longer require a Core `nonce`.
-- Validation results use `status`, independent `checks`, `event_identity`, and optional `acceptance`.
-- D/T/V Core minimum shapes are validated before requests are sent.
-- Historical pre-0.7 handling remains explicit; there is no automatic fallback.
-- Event Hash remains exact-artifact identity and MUST NOT be treated as stable Event Identity.
-- Chain and policy semantics are not inferred as JEP Core behavior.
-- `conformance_class` is preserved when the API returns it.
+- Publish the maintained JavaScript SDK under the owner-controlled npm scope `@hjs-api-db/jep-sdk-js`. The GitHub repository remains `hjs-spec/sdk-js`.
+- Update installation and import instructions; document the one-time real-package bootstrap before Trusted Publisher configuration.
+- Keep runtime source, public types, Core 0.7 paths and event/signature semantics unchanged. Existing consumers must explicitly update the dependency/import name; no registry redirect or package transfer is implied.
+- Add metadata/self-import and isolated offline packed-install tests.
+- Use OIDC without the historical NPM_TOKEN fallback; keep registry-only recovery manual to avoid a release/download race.
 
-Protocol target: JEP Core 0.7, wire major `jep: "1"`.
-
-GitHub tarball and npm publication run after the test and version-consistency gates. Registry delivery requires an authorized npm publisher; its result is tracked separately from the GitHub release.
+GitHub v0.7.1 and older assets remain unchanged under the historical scope. npm publication of the new scope is pending the owner's authenticated initial upload. No placeholder package, new protocol draft or production credential is created by this release.
