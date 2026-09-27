@@ -1,0 +1,33 @@
+name: Verify published npm package anonymously
+on:
+  pull_request:
+    paths: ['.github/workflows/verify-npm.yml', 'scripts/verify_npm_public.py', 'tests/test_registry_verifier.py']
+  push:
+    branches: [main]
+    paths: ['.github/workflows/verify-npm.yml', 'scripts/verify_npm_public.py', 'tests/test_registry_verifier.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check verifier isolation and failure guards
+        run: python -m unittest discover -s tests -p 'test_registry_verifier.py' -v
+      - name: Verify registry bytes and anonymous installation (no publishing)
+        run: python scripts/verify_npm_public.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: public-npm-evidence
+          path: public-npm-evidence/
