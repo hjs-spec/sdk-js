@@ -1,0 +1,128 @@
+name: First npm publication (0.7.2 only)
+on:
+  pull_request:
+    paths: ['.github/workflows/bootstrap-npm.yml']
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type publish-0.7.2 to authorize the first public npm upload'
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.repository }}
+  cancel-in-progress: false
+jobs:
+  bootstrap:
+    if: github.event_name == 'pull_request' || (github.ref == 'refs/heads/main' && inputs.confirmation == 'publish-0.7.2')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PACKAGE_FILE: hjs-api-db-jep-sdk-js-0.7.2.tgz
+      PACKAGE_SHA256: 18e557ea6cbe6c46b42f18ddfb2368d4f7a3eb1ab75916fd7a0031d128010e40
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download the existing immutable release artifact (no rebuild)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download v0.7.2 --repo hjs-spec/sdk-js --pattern "$PACKAGE_FILE" --dir dist
+      - name: Check exact bytes, package metadata and isolated offline import
+        run: |
+          python - <<'PY'
+          import hashlib, json, os, subprocess, tarfile, tempfile
+          from pathlib import Path
+          path = Path('dist', os.environ['PACKAGE_FILE']).resolve()
+          assert hashlib.sha256(path.read_bytes()).hexdigest() == os.environ['PACKAGE_SHA256'], 'Release hash mismatch'
+          with tarfile.open(path, 'r:gz') as archive:
+              members = archive.getmembers()
+              assert len(members) == 6 and all(m.isfile() for m in members), 'Unexpected archive contents'
+              assert len({m.name for m in members}) == len(members), 'Duplicate archive paths'
+              assert all(m.name.startswith('package/') and '..' not in Path(m.name).parts for m in members), 'Unsafe archive path'
+              metadata = json.load(archive.extractfile('package/package.json'))
+          assert metadata['name'] == '@hjs-api-db/jep-sdk-js', 'Wrong package'
+          assert metadata['version'] == '0.7.2', 'Wrong version'
+          assert metadata['repository']['url'] == 'https://github.com/hjs-spec/sdk-js.git'
+          assert not metadata.get('dependencies'), 'Unexpected runtime dependencies'
+          with tempfile.TemporaryDirectory() as work:
+              subprocess.run(['npm', 'install', str(path), '--offline', '--ignore-scripts', '--no-audit', '--no-fund', '--package-lock=false'], cwd=work, check=True)
+              subprocess.run(['node', '--input-type=module', '-e', "const m=await import('@hjs-api-db/jep-sdk-js'); if (typeof m.JEPClient !== 'function' || m.JEP_CORE_PROFILE !== 'jep-core-0.7') throw Error('Invalid SDK exports'); console.log('Verified packed SDK import');"], cwd=work, check=True)
+          print('Release hash, identity and offline import verified; no npm credential used.')
+          PY
+      - name: Check whether the exact version is already published
+        id: registry
+        run: |
+          python - <<'PY'
+          import hashlib, json, os
+          from urllib.error import HTTPError
+          from urllib.parse import urlsplit
+          from urllib.request import urlopen
+          try:
+              with urlopen('https://registry.npmjs.org/@hjs-api-db%2fjep-sdk-js/0.7.2', timeout=30) as response:
+                  metadata = json.load(response)
+          except HTTPError as error:
+              if error.code != 404:
+                  raise
+              needed = True
+          else:
+              assert metadata['name'] == '@hjs-api-db/jep-sdk-js' and metadata['version'] == '0.7.2'
+              url = metadata['dist']['tarball']
+              parsed = urlsplit(url)
+              assert parsed.scheme == 'https' and parsed.hostname == 'registry.npmjs.org'
+              with urlopen(url, timeout=30) as response:
+                  assert hashlib.sha256(response.read()).hexdigest() == os.environ['PACKAGE_SHA256'], 'Existing registry artifact differs; stop without changing it'
+              needed = False
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write('needed=' + str(needed).lower() + '\n')
+          print('First publication required.' if needed else 'Identical version already published; no re-upload.')
+          PY
+      - name: Publish once with the owner-provided temporary token
+        if: github.event_name == 'workflow_dispatch' && steps.registry.outputs.needed == 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_BOOTSTRAP_TOKEN }}
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo '::error::Save the short-lived npm token as repository secret NPM_BOOTSTRAP_TOKEN first.'
+            exit 1
+          fi
+          account=$(npm whoami --registry=https://registry.npmjs.org/)
+          if [ "$account" != 'hjs-api-db' ]; then
+            echo '::error::The token must belong to npm account hjs-api-db.'
+            exit 1
+          fi
+          npm publish "./dist/$PACKAGE_FILE" --access public --ignore-scripts --provenance=false --registry=https://registry.npmjs.org/
+      - name: Independently verify registry bytes and clean registry installation
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          python - <<'PY'
+          import hashlib, json, os, subprocess, tempfile, time
+          from urllib.error import HTTPError
+          from urllib.parse import urlsplit
+          from urllib.request import urlopen
+          for attempt in range(6):
+              try:
+                  with urlopen('https://registry.npmjs.org/@hjs-api-db%2fjep-sdk-js/0.7.2', timeout=30) as response:
+                      metadata = json.load(response)
+                  break
+              except HTTPError as error:
+                  if error.code != 404 or attempt == 5:
+                      raise
+                  time.sleep(10)
+          assert metadata['name'] == '@hjs-api-db/jep-sdk-js' and metadata['version'] == '0.7.2'
+          parsed = urlsplit(metadata['dist']['tarball'])
+          assert parsed.scheme == 'https' and parsed.hostname == 'registry.npmjs.org'
+          with urlopen(metadata['dist']['tarball'], timeout=30) as response:
+              assert hashlib.sha256(response.read()).hexdigest() == os.environ['PACKAGE_SHA256'], 'Registry bytes differ'
+          with tempfile.TemporaryDirectory() as work:
+              subprocess.run(['npm', 'install', '@hjs-api-db/jep-sdk-js@0.7.2', '--ignore-scripts', '--no-audit', '--no-fund', '--package-lock=false', '--registry=https://registry.npmjs.org/'], cwd=work, check=True)
+              subprocess.run(['node', '--input-type=module', '-e', "const m=await import('@hjs-api-db/jep-sdk-js'); if (typeof m.JEPClient !== 'function' || m.JEP_CORE_PROFILE !== 'jep-core-0.7') throw Error('Invalid registry import');"], cwd=work, check=True)
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+              summary.write('Verified @hjs-api-db/jep-sdk-js@0.7.2: registry tarball matches the pinned GitHub artifact and imports in a clean directory.\n\nRevoke the temporary npm token and remove NPM_BOOTSTRAP_TOKEN. Configure the package Trusted Publisher for GitHub hjs-spec/sdk-js, release.yml, no environment, with direct publish enabled. Do not republish this version.\n\nThis bootstrap used token authentication, not OIDC provenance. No SDK code or protocol format was changed.\n')
+          print('Registry bytes and clean installation verified.')
+          PY
