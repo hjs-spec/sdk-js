@@ -2,56 +2,32 @@
 
 Current package: **`@hjs-api-db/jep-sdk-js`**, software **0.7.2**.
 GitHub source and OIDC owner remain **`hjs-spec/sdk-js`**.
-No new npm organization, account conversion or paid plan is required for this public package.
+No new npm organization, account conversion or paid plan is required.
 
-## First publication — owner action
+## First publication completed — 2026-09-27
 
-This release changes the npm account scope. It does not transfer an old package,
-recover another account, rewrite historical tarballs or change Core 0.7.
-The new package needs an initial publication before a Trusted Publisher can be configured.
-Do not use the old @hjs-spec tarball or rename a tarball filename to change its package name.
+The [owner-authorized bootstrap](https://github.com/hjs-spec/sdk-js/actions/runs/36293757071/job/108550074854) published `@hjs-api-db/jep-sdk-js@0.7.2` at 04:25 UTC. The version endpoint and tarball hash then passed, but the immediate npm install request for the package index returned E404. That post-upload failure did not undo publication. Do not upload 0.7.2 again or create another token.
 
-### Browser-only option
+The [independent read-only verification](https://github.com/hjs-spec/sdk-js/actions/runs/36294562815) passed at 04:31 UTC:
 
-No workstation Node.js installation is necessary for this option. The owner
-configures npm and a GitHub repository secret; GitHub runs the upload.
+- Anonymous version, full-package and install-v1 metadata were readable.
+- Actual npm tarball bytes matched GitHub SHA-256 `18e557ea6cbe6c46b42f18ddfb2368d4f7a3eb1ab75916fd7a0031d128010e40`; SHA-512 integrity and SHA-1 metadata also matched.
+- An empty consumer directory, fresh cache, empty npm configuration and an allowlisted environment installed the exact version without a credential and imported its expected SDK exports and Core 0.7 profile.
+- Five verifier isolation/negative tests passed; existing SDK tests remained unchanged.
 
-1. Log in to npm as `hjs-api-db`, verify the correct email and complete any interactive security challenge. At https://www.npmjs.com/settings/hjs-api-db/tokens create a temporary Granular Access Token named `jep-sdk-first-publish`. Use **Read and write (publish and stage)**, enable **Bypass 2FA** for this non-interactive first upload, and select only the `@hjs-api-db` package scope. Do not select the unrelated old packages or grant organization-management access. If the personal scope is not offered, stop and review the available restrictions rather than silently granting all-package access. Leave IP restrictions empty for the GitHub-hosted runner; set the shortest practical expiry (one day or a custom next-day date). This token can publish without a human prompt, so use it only for this one-time bootstrap and revoke promptly. It does not disable account 2FA.
-2. Copy the token directly into https://github.com/hjs-spec/sdk-js/settings/secrets/actions/new as the repository secret **`NPM_BOOTSTRAP_TOKEN`**. Never send it, a recovery code or an authentication link through chat or commit it to the repository. A saved secret is not itself a successful publication.
-3. Open https://github.com/hjs-spec/sdk-js/actions/workflows/bootstrap-npm.yml, select **Run workflow**, keep branch **main**, enter **`publish-0.7.2`** as the confirmation and run. This is the only workflow that reads the bootstrap secret; old release/registry tasks do not use it.
-4. Require the complete workflow to succeed. It verifies the existing GitHub tarball's pinned SHA-256, package name/version/source and clean offline import before uploading. It checks npm identity `hjs-api-db`, then independently downloads the registry tarball and checks its hash and clean installation. Identical already-published versions are not uploaded again; a differing existing artifact stops the workflow. PR checks do not publish and do not read the npm token. No SDK package is rebuilt.
-5. After successful publication, revoke this temporary token in npm and remove the GitHub secret. Configure the package's `release.yml` Trusted Publisher below for future versions. The bootstrap deliberately does not generate or claim OIDC provenance.
+The original verification inherited setup-node v4's authentication configuration and had no retry around the install request. Both anonymous and public-placeholder probes returned 200 during the later check, so these results do **not** establish that the placeholder caused the earlier 404. Brief registry/index propagation or caching is consistent with the observed timing, but the exact initial cause is not proven. The repaired verifier isolates npm configuration and bounds propagation retries without weakening byte-integrity checks.
 
-Current npm documentation allows this temporary direct-publish token path; its
-planned January 2027 removal is another reason not to retain it for ongoing
-publishing. A **stage-only** token cannot perform this bootstrap's direct
-`npm publish`. Follow account/package enforcement and never weaken an existing
-policy requiring fully enforced 2FA just to make this workflow pass.
-
-### Alternative: owner workstation
-
-Use a current Node.js LTS installation. In an empty directory, download the
-`hjs-api-db-jep-sdk-js-0.7.2.tgz` asset from this repository's v0.7.2 GitHub release.
-Use the actual reviewed SDK, not an empty placeholder. Confirm your npm account's
-email is verified and enable two-factor authentication when required by npm.
+`verify-npm.yml` and `scripts/verify_npm_public.py` provide the read-only repeat check. They never publish, request an OIDC token or use a repository npm secret. The bootstrap's post-upload check now reuses the same isolated verifier. Historical failed runs are retained; a green read-only verification is not an OIDC-publication test.
 
 ```sh
-npm login --auth-type=web --registry=https://registry.npmjs.org/
-npm whoami --registry=https://registry.npmjs.org/
-# Stop unless whoami returns exactly hjs-api-db.
-npm publish ./hjs-api-db-jep-sdk-js-0.7.2.tgz --access public --registry=https://registry.npmjs.org/
-npm view @hjs-api-db/jep-sdk-js@0.7.2 version dist.integrity --registry=https://registry.npmjs.org/
+npm install @hjs-api-db/jep-sdk-js@0.7.2
 ```
 
-On Windows PowerShell, use `npm.cmd` instead of `npm` to avoid execution-policy
-issues with npm.ps1. Complete login/2FA in npm's own UI. Never send passwords,
-recovery codes, access tokens or authentication links in chat. A local bootstrap
-upload has no GitHub OIDC provenance; do not claim otherwise.
+This initial release used a temporary npm token, not OIDC provenance. No SDK source, package version, signed event format or historical tarball was changed by the verification repair.
 
-## Configure automatic publishing after the package exists
+## Configure future automatic publishing
 
-Open https://www.npmjs.com/package/@hjs-api-db/jep-sdk-js/access and locate
-Settings / Trusted publishing. Add GitHub Actions with:
+Log in to npm as `hjs-api-db`, open https://www.npmjs.com/package/@hjs-api-db/jep-sdk-js/access and locate Settings / Trusted publishing. Add GitHub Actions with:
 
 | Field | Value |
 |---|---|
@@ -61,27 +37,16 @@ Settings / Trusted publishing. Add GitHub Actions with:
 | Environment name | Leave blank |
 | Allowed actions | Permit direct `npm publish` |
 
-The workflow uses GitHub-hosted runners, Node 24 and `id-token: write`.
-It no longer supplies the historical NPM_TOKEN as a fallback. Future VERSION
-changes on main build/test a new archive and publish through OIDC. A configured
-publisher is not itself proof that an OIDC upload has succeeded.
+The existing release workflow uses GitHub-hosted runners, Node 24 and `id-token: write`. It does not use `NPM_BOOTSTRAP_TOKEN` or the historical `NPM_TOKEN`. Future VERSION changes on main build/test a new archive and attempt OIDC publication. Saving this configuration alone does not prove a later upload will succeed; verify it during the next intended release, not by republishing 0.7.2.
+
+Revoke the temporary first-publication token(s) at https://www.npmjs.com/settings/hjs-api-db/tokens and remove only `NPM_BOOTSTRAP_TOKEN` from https://github.com/hjs-spec/sdk-js/settings/secrets/actions . Account 2FA and unrelated package credentials stay unchanged. The first-publication credential is no longer needed for the now-published version or the read-only verification. Never send credentials or recovery codes through chat.
 
 ## Recovery and historical releases
 
-`registry.yml` is manual-only and can publish an existing GitHub release without
-recreating it. Authorize a separate Trusted Publisher for `registry.yml` only
-when this recovery path is needed; authorizing `release.yml` does not authorize
-`registry.yml`. Both use the GitHub owner `hjs-spec`, repository `sdk-js`, no environment,
-and direct-publish permission.
+`registry.yml` is manual-only and may publish an unpublished existing GitHub release without rebuilding it. It needs its own Trusted Publisher when used; `release.yml` authorization does not cover `registry.yml`.
 
-Do not rerun old failed 0.7.1 jobs: they retain the old npm package name.
-Do not rerun a full release for an existing GitHub version. The workflow refuses
-to overwrite releases. After an initial upload, do not attempt to upload
-0.7.2 again; configure OIDC for subsequent versions. Existing packages
-`hjs-client`, `jep-snap`, and organization `jep-eth` are unrelated and unchanged.
+Do not rerun old 0.7.1 publication jobs: they retain the historical `@hjs-spec` name. Do not rerun a full release for an existing GitHub version. The workflow refuses to overwrite releases. Existing `hjs-client`, `jep-snap`, and `jep-eth` are unrelated and unchanged.
 
-Official references:
-- https://docs.npmjs.com/creating-and-viewing-access-tokens/
-- https://docs.npmjs.com/about-access-tokens/
-- https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/
-- https://docs.npmjs.com/trusted-publishers/
+The one-time bootstrap and its setup history remain in [PR #13](https://github.com/hjs-spec/sdk-js/pull/13). Do not create an empty placeholder package or weaken account security to repeat it.
+
+Official references: https://docs.npmjs.com/trusted-publishers/ and https://docs.npmjs.com/revoking-access-tokens/ .
