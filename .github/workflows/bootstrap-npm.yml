@@ -97,32 +97,16 @@ jobs:
             exit 1
           fi
           npm publish "./dist/$PACKAGE_FILE" --access public --ignore-scripts --provenance=false --registry=https://registry.npmjs.org/
+      - name: Read the verification script only after publication
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Independently verify registry bytes and clean registry installation
         if: github.event_name == 'workflow_dispatch'
-        run: |
-          python - <<'PY'
-          import hashlib, json, os, subprocess, tempfile, time
-          from urllib.error import HTTPError
-          from urllib.parse import urlsplit
-          from urllib.request import urlopen
-          for attempt in range(6):
-              try:
-                  with urlopen('https://registry.npmjs.org/@hjs-api-db%2fjep-sdk-js/0.7.2', timeout=30) as response:
-                      metadata = json.load(response)
-                  break
-              except HTTPError as error:
-                  if error.code != 404 or attempt == 5:
-                      raise
-                  time.sleep(10)
-          assert metadata['name'] == '@hjs-api-db/jep-sdk-js' and metadata['version'] == '0.7.2'
-          parsed = urlsplit(metadata['dist']['tarball'])
-          assert parsed.scheme == 'https' and parsed.hostname == 'registry.npmjs.org'
-          with urlopen(metadata['dist']['tarball'], timeout=30) as response:
-              assert hashlib.sha256(response.read()).hexdigest() == os.environ['PACKAGE_SHA256'], 'Registry bytes differ'
-          with tempfile.TemporaryDirectory() as work:
-              subprocess.run(['npm', 'install', '@hjs-api-db/jep-sdk-js@0.7.2', '--ignore-scripts', '--no-audit', '--no-fund', '--package-lock=false', '--registry=https://registry.npmjs.org/'], cwd=work, check=True)
-              subprocess.run(['node', '--input-type=module', '-e', "const m=await import('@hjs-api-db/jep-sdk-js'); if (typeof m.JEPClient !== 'function' || m.JEP_CORE_PROFILE !== 'jep-core-0.7') throw Error('Invalid registry import');"], cwd=work, check=True)
-          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
-              summary.write('Verified @hjs-api-db/jep-sdk-js@0.7.2: registry tarball matches the pinned GitHub artifact and imports in a clean directory.\n\nRevoke the temporary npm token and remove NPM_BOOTSTRAP_TOKEN. Configure the package Trusted Publisher for GitHub hjs-spec/sdk-js, release.yml, no environment, with direct publish enabled. Do not republish this version.\n\nThis bootstrap used token authentication, not OIDC provenance. No SDK code or protocol format was changed.\n')
-          print('Registry bytes and clean installation verified.')
-          PY
+        run: python scripts/verify_npm_public.py
+      - uses: actions/upload-artifact@v4
+        if: always() && github.event_name == 'workflow_dispatch'
+        with:
+          name: public-npm-evidence
+          path: public-npm-evidence/
