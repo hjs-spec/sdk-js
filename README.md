@@ -16,35 +16,19 @@ as 0.6.
 
 ## Status
 
-Experimental reference SDK. It does not define new JEP Core semantics and
-does not determine factual truth, authorization validity, legal effect,
-causality, regulatory compliance, or policy outcome.
+Experimental HTTP client. Event creation and verification run on the configured
+API. Start the [local reference API](https://github.com/hjs-spec/jep-quickstart#start-a-local-api)
+before running the examples below.
 
 ## Installation
-
-Starting with software 0.7.2, the npm package and import name is
-**`@hjs-api-db/jep-sdk-js`**. The source repository remains
-**`hjs-spec/sdk-js`** on GitHub; npm account scope and GitHub owner are separate.
-
-Version 0.7.2 is published on npm. Its public metadata, exact tarball bytes and
-anonymous clean installation/import were [independently verified](https://github.com/hjs-spec/sdk-js/actions/runs/36294562815).
 
 ```bash
 npm install @hjs-api-db/jep-sdk-js@0.7.2
 ```
 
-The identical GitHub release tarball remains available:
-
-```bash
-npm install https://github.com/hjs-spec/sdk-js/releases/download/v0.7.2/hjs-api-db-jep-sdk-js-0.7.2.tgz
-```
-
-Both install the same package and use the new import below. The historical
-`@hjs-spec/jep-sdk-js` tarballs, including v0.7.1, are preserved unchanged;
-they are not republished or silently redirected. Existing users of a historical
-tarball must explicitly change their dependency and import name when adopting
-0.7.2. Runtime source, types, API paths and signed event semantics are unchanged.
-See [PUBLISHING.md](PUBLISHING.md) for publication evidence and future automatic-release setup.
+The package and import name is `@hjs-api-db/jep-sdk-js`. When upgrading from
+`@hjs-spec/jep-sdk-js`, update both the dependency and imports.
+[Release and installation evidence](PUBLISHING.md).
 
 ## Quick start
 
@@ -62,22 +46,6 @@ console.log(created.event_hash);
 const verified = await client.verifyEvent({ event: created.event, mode: "archival" });
 console.log(verified.status, verified.checks);
 ```
-
-## JEP Core 0.7 model
-
-- Event Identity is `(who,id)`; `id` is required.
-- Core does not require a top-level nonce.
-- Event Hash identifies an exact signed artifact, not Event Identity.
-- Validation uses independent checks rather than cumulative Validation Levels.
-- Acceptance may return `accepted` or `already_accepted`.
-- D requires `what.delegatee` and `what.scope`.
-- T requires `ref` and `what.termination_scope`.
-- V requires `ref`, `what.verification_scope`, and `what.result`.
-- Logical JEP event references use Event Identity; exact-artifact pinning may
-  additionally carry Event Hash.
-
-The normative Core source and schemas are maintained in
-[jep-core](https://github.com/hjs-spec/jep-core).
 
 ## Legacy pre-0.7
 
@@ -125,11 +93,10 @@ npm test
 
 Tests include real loopback HTTP client behavior, npm scope/metadata checks and
 an offline installation/import of the actual packed archive in a fresh directory.
-They do not prove live-service readiness or external truth.
 
 ## Related repositories
 
-- JEP Core 0.7: https://github.com/hjs-spec/jep-core
+- Core contract and implementation path: https://github.com/hjs-spec/jep-core#current-contract
 - JEP API: https://github.com/hjs-spec/jep-api
 - Python SDK: https://github.com/hjs-spec/sdk-py
 - Go SDK: https://github.com/hjs-spec/sdk-go
