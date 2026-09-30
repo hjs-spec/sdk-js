@@ -2,18 +2,6 @@
 
 JavaScript client for the current [JEP Core 0.7](https://github.com/hjs-spec/jep-core) reference API.
 
-The default client uses:
-
-```text
-POST /v0.7/events/create
-POST /v0.7/events/verify
-GET  /health
-```
-
-Historical pre-0.7 compatibility is explicit through `createEventLegacy()` and
-`verifyEventLegacy()`. A failed 0.7 validation is never heuristically retried
-as 0.6.
-
 ## Status
 
 Experimental HTTP client. Event creation and verification run on the configured
@@ -47,16 +35,6 @@ const verified = await client.verifyEvent({ event: created.event, mode: "archiva
 console.log(verified.status, verified.checks);
 ```
 
-## Legacy pre-0.7
-
-Legacy handling is explicit:
-
-```js
-await client.verifyEventLegacy({ event: legacyEvent, mode: "archival" });
-```
-
-Do not interpret a failed 0.7 validation as permission to retry a legacy decoder.
-
 ## Core exports
 
 - `JEPClient`
@@ -84,6 +62,16 @@ Current 0.7 results expose:
 Application metadata belongs in `ext`. Unknown critical extensions fail
 `extension_processing`; non-critical unknown extensions may be ignored by a
 generic Core verifier.
+
+## Legacy pre-0.7
+
+Legacy handling is explicit:
+
+```js
+await client.verifyEventLegacy({ event: legacyEvent, mode: "archival" });
+```
+
+Do not interpret a failed 0.7 validation as permission to retry a legacy decoder.
 
 ## Testing
 
