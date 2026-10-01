@@ -15,4 +15,7 @@ npm test
 
 Keep changes focused, cover changed behavior, and update public types and documentation together. Protocol definitions stay in [Core](https://github.com/hjs-spec/jep-core). Keep historical decoding explicit.
 
-See [PUBLISHING.md](PUBLISHING.md) for release and registry recovery. Contact: signal@humanjudgment.org.
+See [PUBLISHING.md](PUBLISHING.md) for release and registry recovery.
+Use the [shared contribution routes](https://github.com/hjs-spec/.github/blob/main/CONTRIBUTING.md)
+for independent implementations and interoperability reports. Report security-sensitive
+findings [privately](https://github.com/hjs-spec/.github/blob/main/SECURITY.md).
